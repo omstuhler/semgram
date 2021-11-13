@@ -711,10 +711,10 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 10.81317 secs
+## Time difference of 10.34894 secs
 ## 
 ## Time fast mode:
-## Time difference of 2.374315 secs
+## Time difference of 2.316229 secs
 ## 
 ## Time saved: 78 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
