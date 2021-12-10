@@ -52,10 +52,10 @@ extract_motifs = function(tokens = NULL,
   ###############################################################################################
   ##### Text input
   if(!exists("tokens")){
-    message("It seems you didn't provide a tokens object.")
+    message("It seems you didn't provide a tokens object.\n")
   }
   if(!exists("entities")){
-    message("It seems you didn't specify any core entitied to extract motifs around.")
+    message("It seems you didn't specify any core entities to extract motifs around.\n")
   }
 
   ###############################################################################################
@@ -126,7 +126,7 @@ extract_motifs = function(tokens = NULL,
     tokens$phrase_replacement = NA
   }
   if(T %in% str_detect(entities, " ") & parse_multi_token_entities == F){
-    "Warning: multi-token entities were detected but parsing them was set to FALSE."
+    "Warning: multi-token entities were detected but parsing them was set to FALSE.\n"
   }
 
 
@@ -221,7 +221,7 @@ extract_motifs = function(tokens = NULL,
   ##### Set auxiliary markup parameter
   if(get_aux_verbs){
     if(!aux_verb_markup){
-      message("You are extracting auxiliary verbs but aux_verb_markup is set to FALSE. This may not give ideal results.")
+      message("You are extracting auxiliary verbs but aux_verb_markup is set to FALSE. This may not give ideal results.\n")
     }
     tokens$get_aux_verbs_par = "YES"
     verb_pos = c("VERB", "AUX")
@@ -242,12 +242,12 @@ extract_motifs = function(tokens = NULL,
     if(verbose){cat("Extracting actions\n")}
     ###############################################################################################
     ##### Rule: nsubj act or conjuncted second verb
-    ##### Example: "ENTITY asked Joe." (ENTITY asks)
-    ##### Example: "ENTITY called and asked Joe." (ENTITY asked)
+    ##### Example: "ENTITY asked Joe." (asked)
+    ##### Example: "ENTITY called and asked Joe." (called, asked)
     ##### Note: Note that the current basic annotation scheme cannot distinguish between a dependent of the first
-    ##### conjunct and a shared dependent of the whole coordination. See https://universaldependencies.org/u/dep/conj.html
-    ##### E.g. in "ENTITY called and Joe answered." "answered" would be picked up as action of ENTITY.
-    ##### Therefore we add a not_children option to avoid cases where an independent subject is named.
+    ##### conjunct and a shared dependent of the whole coordination (see https://universaldependencies.org/u/dep/conj.html).
+    ##### E.g. in "ENTITY called and Joe answered." "answered" would be picked up as action of ENTITY if we just took conj-dependents.
+    ##### To prevent this, we add a not_children condition to avoid cases where an independent subject is named.
     tryCatch({
       nsubj_act_conj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
                               parents(pos = verb_pos,
@@ -280,8 +280,8 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: nsubj with conjuncted second actor and possibly second verb
-    ##### Example: "Joe and ENTITY called Steve" (ENTITY asked)
-    ##### Example: "Joe and ENTITY called and asked Steve." (ENTITY asked)
+    ##### Example: "Joe and ENTITY called Steve" (called)
+    ##### Example: "Joe and ENTITY called and asked Steve." (called, asked)
     if(fast){
       tokens$nsubj_act_noun_conj_verb_conj = NA
     } else {
@@ -321,7 +321,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive subject with by
-    ##### Example: "Sue is asked by Entity." (asks)
+    ##### Example: "Sue is asked by Entity." (asked)
     if(fast){
       tokens$by_act = NA
     } else {
@@ -344,7 +344,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive subject with by and noun conjunct
-    ##### Example: "Sue is asked by Steve and ENTITY." (asks)
+    ##### Example: "Sue is asked by Steve and ENTITY." (asked)
     if(fast){
       tokens$by_act_noun_conjunct = NA
     } else {
@@ -373,7 +373,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive subject with by conjunction
-    ##### Example: "Sue is called and asked by ENTITY." (calls)
+    ##### Example: "Sue is called and asked by ENTITY." (called)
     if(fast){
       tokens$by_act_2 = NA
     } else {
@@ -401,7 +401,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive subject with by conjunction second verb
-    ##### Example: "Sue is called and asked by ENTITY." (asks)
+    ##### Example: "Sue is called and asked by ENTITY." (asked)
     if(fast){
       tokens$by_act_2_1 = NA
     } else {
@@ -428,7 +428,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive subject with by verb conjunction and noun conjunction
-    ##### Example: "Sue is called and asked by Greg and ENTITY" (call)
+    ##### Example: "Sue is called and asked by Greg and ENTITY" (called)
     if(fast){
       tokens$by_act_2_noun_conj = NA
     } else {
@@ -458,8 +458,8 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Passive subject with by verb conjunction and noun conjunction but get verb conjunct
-    ##### Example: "Sue is called and asked by Greg and ENTITY." (ask)
+    ##### Rule: Passive subject with by verb conjunction and noun conjunction (second verb)
+    ##### Example: "Sue is called and asked by Greg and ENTITY." (asked)
     if(fast){
       tokens$by_act_2_noun_conj_1 = NA
     } else {
@@ -489,7 +489,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Verb with xcomp clause and its conjuncts
     ##### Example: "ENTITY wants to eat and drink." (eat, drink)
-    ##### Note: not_children inserted is to avoid passiveness.
+    ##### Note: not_children inserted is in order to avoid passiveness.
     if(fast){
       tokens$xcomp_act_conj_verb = NA
     } else {
@@ -530,7 +530,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Verb with xcomp clause and noun conjunct
     ##### Example: "Jack and ENTITY want to eat." (eat)
-    ##### Note: not_children inserted is to avoid passiveness.
+    ##### Note: not_children inserted in order to avoid passiveness.
     if(fast){
       tokens$xcomp_act_conj_noun = NA
     } else {
@@ -574,6 +574,7 @@ extract_motifs = function(tokens = NULL,
     ##### Example: "ENTITY calls Joe, Sue and Michael." (Joe, Sue, Michael)
     ##### Example: "ENTITY give Joseph a present." (Joseph, present)
     ##### Example: "ENTITY called my friend Peter." (friend, Peter)
+    ##### Note: The last sentence exemplifies how appositions are considered. This presumes that use_appos is set to TRUE.
     tryCatch({
       nsubj_obj_conj_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
                                   parents(pos = c("VERB", "AUX"), NOT(lemma = "have"),
@@ -598,7 +599,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of nsubj act
+    ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
     ##### Example: "Joe and ENTITY asked Joe, Sue and Michael." (Joe, Sue, Michael)
     ##### Example: "Steven and ENTITY give Joseph a present." (Joe, Sue, Michael)
     ##### Example: "Steven and ENTITY had lunch." (Joe, Sue, Michael)
@@ -631,7 +632,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of second conjuncted verb
+    ##### Rule: Object of conjuncted verb
     ##### Example: "ENTITY came and kissed Joe, Sue and Michael." (Joe, Sue, Michael)
     ##### Example: "ENTITY came and gave Steve a present." (Steve, present)
     if(fast){
@@ -669,7 +670,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of second conjuncted verb with actor in conjunct position.
+    ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
     ##### Example: "Joe and ENTITY came and kissed Joe, Sue and Michael." (Joe, Sue, Michael)
     ##### Example: "Joe and ENTITY came and gave Steve a present." (Steve, present)
     if(fast){
@@ -810,7 +811,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun
+    ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted subject
     ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (Joseph, Sue, Michael)
     if(fast){
       tokens$by_act_obj_cverb_cobj = NA
@@ -849,7 +850,7 @@ extract_motifs = function(tokens = NULL,
     ##### Rule: Object of verb with xcomp clause
     ##### Example: "ENTITY wants to eat rice, grapes, and steak." (rice, grapes, steak)
     ##### Example: "ENTITY wants to give Steve a present." (Steve, present)
-    ##### Note: not_children inserted is to avoid passiveness.
+    ##### Note: not_children inserted in order to avoid passiveness.
     if(fast){
       tokens$xcomp_act_obj = NA
     } else {
@@ -886,7 +887,7 @@ extract_motifs = function(tokens = NULL,
     ##### Rule: Object of verb with xcomp clause and verb conjunct
     ##### Example: "ENTITY wants to chat and eat rice, grapes, and steak." (rice, grapes, steak)
     ##### Example: "ENTITY wants to chat and give Steven a present." (Steven, present)
-    ##### Note: not_children inserted is to avoid passiveness.
+    ##### Note: not_children inserted in order to avoid passiveness.
     if(fast){
       tokens$xcomp_act_obj_vconj = NA
     } else {
@@ -922,7 +923,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and noun conjunct and subject
+    ##### Rule: Objects of verb with xcomp clause and ENTITY as subject conjunct
     ##### Example: "Jonathan and ENTITY want to eat rice, grapes, and steak." (rice, grapes, steak)
     ##### Example: "Jonathan and ENTITY want to give Steven a present." (Steven, present)
     ##### Note: not_children inserted is to avoid passiveness.
@@ -961,7 +962,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and noun and verb and verb conjunct
+    ##### Rule: Objects of verb with xcomp clause, conjuncted transitive verb, and ENTITY as subject conjunct
     ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and steak." (rice, grapes, steak)
     ##### Example: "Jonathan and ENTITY want to swim and give Steven a present." (Steven, present)
     ##### Note: not_children inserted is to avoid passiveness.
