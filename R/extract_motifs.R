@@ -571,7 +571,7 @@ extract_motifs = function(tokens = NULL,
     if(verbose){cat("Extracting patients\n")}
     ###############################################################################################
     ##### Rule: Object of nsubj act
-    ##### Example: "ENTITY calls Joe, Sue and Michael." (Joe, Sue, Michael)
+    ##### Example: "ENTITY calls Joe, Sue, and Michael." (Joe, Sue, Michael)
     ##### Example: "ENTITY give Joseph a present." (Joseph, present)
     ##### Example: "ENTITY called my friend Peter." (friend, Peter)
     ##### Note: The last sentence exemplifies how appositions are considered. This presumes that use_appos is set to TRUE.
@@ -600,7 +600,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
-    ##### Example: "Joe and ENTITY asked Joe, Sue and Michael." (Joe, Sue, Michael)
+    ##### Example: "Joe and ENTITY asked Joe, Sue, and Michael." (Joe, Sue, Michael)
     ##### Example: "Steven and ENTITY give Joseph a present." (Joe, Sue, Michael)
     ##### Example: "Steven and ENTITY had lunch." (Joe, Sue, Michael)
     if(fast){
@@ -633,7 +633,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Object of conjuncted verb
-    ##### Example: "ENTITY came and kissed Joe, Sue and Michael." (Joe, Sue, Michael)
+    ##### Example: "ENTITY came and kissed Joe, Sue, and Michael." (Joe, Sue, Michael)
     ##### Example: "ENTITY came and gave Steve a present." (Steve, present)
     if(fast){
       tokens$nsubj_conj_obj_act = NA
@@ -671,7 +671,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
-    ##### Example: "Joe and ENTITY came and kissed Joe, Sue and Michael." (Joe, Sue, Michael)
+    ##### Example: "Joe and ENTITY came and kissed Joe, Sue, and Michael." (Joe, Sue, Michael)
     ##### Example: "Joe and ENTITY came and gave Steve a present." (Steve, present)
     if(fast){
       tokens$nsubj_conj_subj_cons_obj = NA
@@ -710,7 +710,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by
-    ##### Example: "Joe, Sue and Michael are asked by ENTITY." (Joe, Sue, Michael)
+    ##### Example: "Joe, Sue, and Michael are asked by ENTITY." (Joe, Sue, Michael)
     ##### Example: "Steve is given a present by ENTITY" (Steve, present)
     if(fast){
       tokens$by_act_obj = NA
@@ -743,7 +743,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and noun conjunct
-    ##### Example: "Joseph, Sue and Michael are asked by Jack and ENTITY." (Joe, Sue, Michael)
+    ##### Example: "Joseph, Sue, and Michael are asked by Jack and ENTITY." (Joe, Sue, Michael)
     ##### Example: "Mike and Steve were given a present by Jack and ENTITY." (Steve, present)
     if(fast){
       tokens$by_act_obj_nc = NA
@@ -1012,7 +1012,7 @@ extract_motifs = function(tokens = NULL,
     if(verbose){cat("Extracting action-patients\n")}
     ###############################################################################################
     ##### Rule: Object of nsubj act
-    ##### Example: "ENTITY asked Joe, Sue and Michael." (call, Joe Sue Michael)
+    ##### Example: "ENTITY asked Joe, Sue, and Michael." (asked, Joe Sue Michael)
     ##### Example: "ENTITY give Joseph a present." (give, Joseph present)
     tryCatch({
       nsubj_obj_conj_act_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
@@ -1046,10 +1046,10 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of nsubj act
-    ##### Example: "Joe and ENTITY asked Joe, Sue and Michael." (ask, Joe Sue Michael)
+    ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
+    ##### Example: "Steven and ENTITY asked Joe, Sue, and Michael." (ask, Joe Sue Michael)
     ##### Example: "Steven and ENTITY give Joseph a present." (give, Joseph present)
-    ##### Example: "Steven and ENTITY had lunch." (have, lunch)
+    ##### Example: "Steven and ENTITY had lunch." (had, lunch)
     if(fast){
       nsubj_obj_conj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$nsubj_obj_conj_aP = NA
@@ -1087,9 +1087,9 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of second conjuncted verb
-    ##### Example: "ENTITY came and kissed Joe, Sue and Michael." (kiss, Joe Sue Michael)
-    ##### Example: "ENTITY came and gave Steve a present." (give, Steve present)
+    ##### Rule: Object of conjuncted verb
+    ##### Example: "ENTITY came and kissed Joe, Sue, and Michael." (kissed, Joe Sue Michael)
+    ##### Example: "ENTITY came and gave Steve a present." (gave, Steve present)
     if(fast){
       nsubj_conj_obj_act_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$nsubj_conj_obj_act_aP = NA
@@ -1132,9 +1132,9 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Object of second conjuncted verb with actor in conjunct position.
-    ##### Example: "Joe and ENTITY came and kissed Joe, Sue and Michael." (kiss, Joe Sue Michael)
-    ##### Example: "Joe and ENTITY came and gave Steve a present." (give, Steve present)
+    ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
+    ##### Example: "Joe and ENTITY came and kissed Joe, Sue, and Michael." (kissed, Joe Sue Michael)
+    ##### Example: "Joe and ENTITY came and gave Steve a present." (gave, Steve present)
     if(fast){
       nsubj_conj_subj_cons_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$nsubj_conj_subj_cons_obj_aP = NA
@@ -1179,8 +1179,8 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by
-    ##### Example: "Joe, Susan, and Michael are asked by ENTITY." (ask, Joe Sue Michael)
-    ##### Example: "Steve is given a present by ENTITY." (give, Steve present)
+    ##### Example: "Joe, Susan, and Michael are asked by ENTITY." (asked, Joe Sue Michael)
+    ##### Example: "Steve is given a present by ENTITY." (given, Steve present)
     if(fast){
       by_act_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_aP = NA
@@ -1219,8 +1219,8 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and noun conjunct
-    ##### Example: "Joseph, Sue and Michael are asked by Jack and ENTITY." (ask, Joe Sue Michael)
-    ##### Example: "Mike and Steve were given a present by Jack and ENTITY." (give, Steve present)
+    ##### Example: "Joseph, Sue and Michael are asked by Jack and ENTITY." (asked, Joe Sue Michael)
+    ##### Example: "Mike and Steve were given a present by Jack and ENTITY." (given, Steve present)
     if(fast){
       by_act_obj_nc_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_nc_aP = NA
@@ -1263,7 +1263,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and conjuncted verb (first verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (ask, Joseph Sue Michael)
+    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (asked, Joseph Sue Michael)
     if(fast){
       by_act_obj_cverb_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_cverb_1_aP = NA
@@ -1305,7 +1305,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and conjuncted verb (second verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (call, Joseph Sue Michael)
+    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (called, Joseph Sue Michael)
     if(fast){
       by_act_obj_cverb_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_cverb_2_aP = NA
@@ -1347,7 +1347,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun (first verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (ask, Joseph Sue Michael)
+    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (asked, Joseph Sue Michael)
     if(fast){
       by_act_obj_cverb_cobj_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_cverb_cobj_1_aP = NA
@@ -1391,7 +1391,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun (second verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (call, Joseph Sue Michael)
+    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (called, Joseph Sue Michael)
     if(fast){
       by_act_obj_cverb_cobj_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
       tokens$by_act_obj_cverb_cobj_2_aP = NA
@@ -1435,7 +1435,7 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Object of verb with xcomp clause
-    ##### Example: "ENTITY wants to eat rice, grapes, and steak." (eat, rice grapes steak)
+    ##### Example: "ENTITY wants to eat rice, grapes, and, steak." (eat, rice grapes steak)
     ##### Example: "ENTITY wants to give Steve a present." (give, Steve present)
     ##### Note: not_children inserted is to avoid passiveness.
     if(fast){
@@ -1524,7 +1524,7 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and noun conjunct and subject
+    ##### Rule: Objects of verb with xcomp clause and ENTITY as subject conjunct
     ##### Example: "Jonathan and ENTITY want to eat rice, grapes, and steak." (eat, rice grapes steak)
     ##### Example: "Jonathan and ENTITY want to give Steven a present." (give, Steven present)
     ##### Note: not_children inserted is to avoid passiveness.
@@ -1570,8 +1570,8 @@ extract_motifs = function(tokens = NULL,
 
 
     ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and noun and verb and verb conjunct
-    ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and steak." (eat, rice grapes steak)
+    ##### Rule: Objects of verb with xcomp clause, conjuncted transitive verb, and ENTITY as subject conjunct
+    ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and, steak." (eat, rice grapes steak)
     ##### Example: "Jonathan and ENTITY want to swim and give Steven a present." (give, Steven present)
     ##### Note: not_children inserted is to avoid passiveness.
     if(fast){
@@ -1625,8 +1625,8 @@ extract_motifs = function(tokens = NULL,
     if(verbose){cat("Extracting treatments\n")}
     ###############################################################################################
     ##### Rule: Object of nsubj act
-    ##### Example: "Joe calls ENTITY." (call)
-    ##### Example: "Joe gives Michael a ENTITY." (give)
+    ##### Example: "Joe calls ENTITY." (calls)
+    ##### Example: "Joe gives Michael a ENTITY." (gives)
     tryCatch({
       dobj_treat = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
                           parents(pos = "VERB",
@@ -1645,8 +1645,8 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: noun conjunct of object of nsubj act
-    ##### Example: "Joe calls Steve and ENTITY." (call)
-    ##### Example: "Joe gives Steve a bannana and an ENTITY." (give)
+    ##### Example: "Joe calls Steve and ENTITY." (calls)
+    ##### Example: "Joe gives Steve an apple and an ENTITY." (gives)
 
     ##### Note: We can't collect more verbs because based on the grammar, it will be
     ##### unclear whether these will be transitive.
@@ -1699,8 +1699,8 @@ extract_motifs = function(tokens = NULL,
 
     ###############################################################################################
     ##### Rule: Passive construction treatment and noun conjunct (entity)
-    ##### Example: "Sue and ENTITY are asked" (asked)
-    ##### Example: "Steve were given bannanas and ENTITY." (give)
+    ##### Example: "Sue and ENTITY are asked." (asked)
+    ##### Example: "Steve were given apples and ENTITY." (given)
     if(fast){
       tokens$obj_of_by_act_nconj = NA
     } else {
@@ -1785,7 +1785,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Actor of nsubj act with object and a noun conjunct (entity)
     ##### Example: "Joseph, Sarah, and Steve call Michael and ENTITY." (Joseph, Sarah, Steve)
-    ##### Example: "Joseph, Sarah, and Steve give Michael a bannana and an ENTITY." (Joseph, Sarah, and Steve)
+    ##### Example: "Joseph, Sarah, and Steve give Michael an apple and an ENTITY." (Joseph, Sarah, and Steve)
     ##### Note: We can't collect more verbs because based on the grammar, it will be
     ##### unclear whether these will be transitive.
     if(fast){
@@ -1850,7 +1850,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Actor of by act with object and noun conjunct (entity)
     ##### Example: "Sue and ENTITY are asked by Peter, Joseph, and Sue." (Peter, Joseph, Sue)
-    ##### Example: "Steve were given bannanas and ENTITY by Peter, Joseph, and Sue." (Peter, Joseph, Sue)
+    ##### Example: "Steve were given apples and ENTITY by Peter, Joseph, and Sue." (Peter, Joseph, Sue)
     if(fast){
       tokens$obj_of_by_act_nconj_ac = NA
     } else {
@@ -1959,7 +1959,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Actor of nsubj act with object and a noun conjunct (entity)
     ##### Example: "Joseph, Sarah, and Steve call Michael and ENTITY." (Joseph Sarah Steve, call)
-    ##### Example: "Joseph, Sarah, and Steve give Michael a bannana and an ENTITY." (Joseph Sarah Steve, give)
+    ##### Example: "Joseph, Sarah, and Steve give Michael an apple and an ENTITY." (Joseph Sarah Steve, give)
     ##### Note: We can't collect more verbs because based on the grammar, it will be
     ##### unclear whether these will be transitive.
     if(fast){
@@ -2040,7 +2040,7 @@ extract_motifs = function(tokens = NULL,
     ###############################################################################################
     ##### Rule: Actor of by act with object and noun conjunct (entity)
     ##### Example: "Sue and ENTITY are asked by Peter, Joseph, and Sue." (Peter, ask)
-    ##### Example: "Steve were given bannanas and ENTITY by Peter, Joseph, and Sue." (Peter, give)
+    ##### Example: "Steve were given apples and ENTITY by Peter, Joseph, and Sue." (Peter, give)
     if(fast){
       obj_of_by_act_nconj_ac_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
       tokens$obj_of_by_act_nconj_ac_At = NA
