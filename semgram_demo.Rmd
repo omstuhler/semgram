@@ -28,6 +28,9 @@ library(semgram)
 In order to make use of spaCy's functionality, we first need to initialize a spaCy annotation pipelines. These pipelines integrate different processing tasks such as tokenization, lemmatization, part-of-speech tagging, and dependency parsing. SpaCy currently maintains [four English language pipelines](https://spacy.io/models/en). You will need to download and initialize one of these models which can by done with the `spacyr` package. The models differ primarily in size and the time they take to run. Larger models tend to achieve slightly better performance. For this demo, the smallest model will suffice ("en_core_web_sm"). All English language pipelines employ the same part-of-speech tag set as well as the ClearNLP dependency scheme and are therefore compatible with the extraction rules implemented in `semgram`. While spaCy provides annotation pipelines for other languages, these use different part-of-speech tag sets and dependency schemes, making them incompatible with the (current!) version of `semgram`.
 
 ```{r 2, message=FALSE}
+# Uncomment for installing spaCy (and miniconda) in a 
+# self-contained environment
+# spacy_install()
 # Uncomment for downloading the "en_core_web_sm" annotation pipeline
 # spacy_download_langmodel("en_core_web_sm")
 spacy_initialize(model = "en_core_web_sm", refresh_settings = T)
