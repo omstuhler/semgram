@@ -173,17 +173,20 @@ pre code {
 <p>For this demo of <code>semgram</code>, we will need <code>spacyr</code>, a wrapper around the popular spaCy Python library. <code>spacyr</code> is an extension of the popular <code>quanteda</code> library you may be familiar with. If you haven’t installed <code>spacyr</code>, you can find instructions for getting <code>spacyr</code> to run on the package’s <a href="https://cran.r-project.org/web/packages/spacyr/readme/README.html">website</a>. <code>spacyr</code> let’s you install both Python and spaCy with a single line of code from within R.</p>
 <p>Furthermore, we will need <code>devtools</code> - a package for development tools we will use to install <code>semgram</code>.</p>
 <p>Finally, it shouldn’t go without mention that <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a> package maintained by Kasper Welbers and Wouter van Atteveldt. <code>rsyntax</code> is an general library for querying and reshaping dependency trees and was used to implement the rules contained in <code>semgram</code>.</p>
-<pre class="r"><code>library(spacyr)
-library(devtools)
+<pre class="r"><code>library(devtools)
+library(spacyr)
 
 ### Installing semgram
-#devtools::install_github(&quot;review-account/semgram&quot;) # uncomment if you need to install semgram
+devtools::install_github(&quot;review-account/semgram&quot;) # uncomment if you need to install semgram
 library(semgram)</code></pre>
 </div>
 <div id="initialize-spacy-annotation-pipeline" class="section level1">
 <h1>Initialize spaCy annotation pipeline</h1>
 <p>In order to make use of spaCy’s functionality, we first need to initialize a spaCy annotation pipelines. These pipelines integrate different processing tasks such as tokenization, lemmatization, part-of-speech tagging, and dependency parsing. SpaCy currently maintains <a href="https://spacy.io/models/en">four English language pipelines</a>. You will need to download and initialize one of these models which can by done with the <code>spacyr</code> package. The models differ primarily in size and the time they take to run. Larger models tend to achieve slightly better performance. For this demo, the smallest model will suffice (“en_core_web_sm”). All English language pipelines employ the same part-of-speech tag set as well as the ClearNLP dependency scheme and are therefore compatible with the extraction rules implemented in <code>semgram</code>. While spaCy provides annotation pipelines for other languages, these use different part-of-speech tag sets and dependency schemes, making them incompatible with the (current!) version of <code>semgram</code>.</p>
-<pre class="r"><code># Uncomment for downloading the &quot;en_core_web_sm&quot; annotation pipeline
+<pre class="r"><code># Uncomment for installing spaCy (and miniconda) in a 
+# self-contained environment
+# spacy_install()
+# Uncomment for downloading the &quot;en_core_web_sm&quot; annotation pipeline
 # spacy_download_langmodel(&quot;en_core_web_sm&quot;)
 spacy_initialize(model = &quot;en_core_web_sm&quot;, refresh_settings = T)</code></pre>
 </div>
@@ -325,7 +328,7 @@ str(motifs)</code></pre>
 </div>
 <div id="reproducing-table-2" class="section level2">
 <h2>Reproducing Table 2</h2>
-<p>Table 2 of the manuscript ‘What happens in a text?’ showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all 48 sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.”</p>
+<p>Table 2 of the manuscript ‘What goes on in a text?’ showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all 48 sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.”</p>
 <pre class="r"><code>actions = data.frame(&quot;Motif class&quot; = &quot;a&quot;,
                      &quot;Sentence&quot; = c(&quot;Emil calls.&quot;,
                                     &quot;Emil can call.&quot;,
@@ -711,12 +714,12 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 11.43057 secs
+## Time difference of 11.59963 secs
 ## 
 ## Time fast mode:
-## Time difference of 2.601064 secs
+## Time difference of 2.579195 secs
 ## 
-## Time saved: 77 %</code></pre>
+## Time saved: 78 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
 <pre class="r"><code>cat(&quot;Total motifs in normal mode:&quot;,length(unlist(motifs)), &quot;\n&quot;)
 cat(&quot;Total motifs in fast mode:&quot;,length(unlist(motifs_fast)), &quot;\n&quot;)
