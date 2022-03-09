@@ -126,7 +126,7 @@ extract_motifs = function(tokens = NULL,
     tokens$phrase_replacement = NA
   }
   if(T %in% str_detect(entities, " ") & parse_multi_token_entities == F){
-    "Warning: multi-token entities were detected but parsing them was set to FALSE.\n"
+    message("Warning: multi-token entities were detected but parsing them was set to FALSE.\n")
   }
 
 
