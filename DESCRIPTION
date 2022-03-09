@@ -5,7 +5,7 @@ Authors@R: person("Jane", "Doe", email = "first.last@example.com", role = c("aut
 Description: semgram extracts semantic motifs from textual data. It builds on an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity.
 Depends: 
 	R (>= 3.5.3),
-	rsyntax (== 0.1.2),
+	rsyntax (>= 0.1.2),
 	data.table,
 	dplyr,
 	stringr
