@@ -78,7 +78,7 @@ motifs = extract_motifs(tokens = spacy_parse(text, dependency=T), entities = c("
 str(motifs)
 ```
 
-We can pass multiple sentences or whole documents to `spacy_parse` and `extract_motifs` and specify multiple core entities. We can also vary a number of hyperparameters such as whether or not auxiliary verbs should be considered as action motifs (`get_aux_verbs`); motif markup should be provided (`markup`); or whether the motifs should be provided in token or lemma form (`extract`).
+We can pass multiple sentences or whole documents to `spacy_parse` and `extract_motifs` and specify multiple core entities. We can also vary a number of hyper-parameters such as whether or not auxiliary verbs should be considered as action motifs (`get_aux_verbs`); motif markup should be provided (`markup`); or whether the motifs should be provided in token or lemma form (`extract`).
 Note that the specification of entities is case sensitive.
 
 ```{r 7}
