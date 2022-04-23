@@ -8,18 +8,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Load packages  
 
-For this demo of `semgram`, we will need `spacyr`, a wrapper around the popular spaCy Python library. `spacyr` is an extension of the popular `quanteda` library you may be familiar with. If you haven't installed `spacyr`, you can find instructions for getting `spacyr` to run on the package's [website](https://cran.r-project.org/web/packages/spacyr/readme/README.html). `spacyr` let's you install both Python and spaCy with a single line of code from within R.
+For this demo of `semgram`, we will need [`spacyr`](https://github.com/quanteda/spacyr), a wrapper around the popular spaCy Python library. `spacyr` is an extension of the popular `quanteda` library you may be familiar with. If you haven't installed `spacyr`, you can find instructions for getting `spacyr` to run on the package's [website](https://cran.r-project.org/web/packages/spacyr/readme/README.html). `spacyr` let's you install both Python and spaCy with a single line of code from within R.
 
-Furthermore, we will need `devtools` - a package for development tools we will use to install `semgram`.
+Furthermore, we will need [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) - a package for development tools we will use to install `semgram`.
 
-Finally, it shouldn't go without mention that `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
+Finally, `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
 
 ```{r 1, message=FALSE}
 library(devtools)
 library(spacyr)
 
 ### Installing semgram
-devtools::install_github("omstuhler/semgram") # uncomment if you need to install semgram
+devtools::install_github("omstuhler/semgram")
 library(semgram)
 ```
 
