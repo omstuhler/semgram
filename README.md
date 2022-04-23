@@ -2,9 +2,11 @@
 
 This repository hosts the ```semgram``` R package.
 
-`semgram` extracts semantic motifs from textual data. It uses an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity. `semgram` uses a comprehensive set of extraction rules to recover semantic motifs from dependency trees (the output of dependency parsers). In doing this, it builds on functionalities of [`spacyr`](https://cran.r-project.org/web/packages/spacyr/index.html) for dependency parsing and [`rsyntax`](https://github.com/vanatteveldt/rsyntax) for implementing rules querying dependency trees.
+`semgram` extracts semantic motifs from textual data. It uses an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity. `semgram` uses a comprehensive set of extraction rules to recover semantic motifs from dependency trees (the output of dependency parsers). A short demo can be found [here](https://htmlpreview.github.io/?https://github.com/review-account/semgram/blob/master/semgram_demo.html).
 
-A short demo can be found [here](https://htmlpreview.github.io/?https://github.com/review-account/semgram/blob/master/semgram_demo.html).
+`semgram` builds on functionalities of [`spacyr`](https://cran.r-project.org/web/packages/spacyr/index.html) for dependency parsing and [`rsyntax`](https://github.com/vanatteveldt/rsyntax) for implementing rules querying dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
+
+If you use semgram in your research, please cite as follows:
 
 ## Installation
 
