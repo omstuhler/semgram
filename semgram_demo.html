@@ -172,12 +172,12 @@ pre code {
 <h1>Load packages</h1>
 <p>For this demo of <code>semgram</code>, we will need <code>spacyr</code>, a wrapper around the popular spaCy Python library. <code>spacyr</code> is an extension of the popular <code>quanteda</code> library you may be familiar with. If you haven’t installed <code>spacyr</code>, you can find instructions for getting <code>spacyr</code> to run on the package’s <a href="https://cran.r-project.org/web/packages/spacyr/readme/README.html">website</a>. <code>spacyr</code> let’s you install both Python and spaCy with a single line of code from within R.</p>
 <p>Furthermore, we will need <code>devtools</code> - a package for development tools we will use to install <code>semgram</code>.</p>
-<p>Finally, it shouldn’t go without mention that <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a> package maintained by Kasper Welbers and Wouter van Atteveldt. <code>rsyntax</code> is an general library for querying and reshaping dependency trees and was used to implement the rules contained in <code>semgram</code>.</p>
+<p>Finally, it shouldn’t go without mention that <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a> package maintained by Kasper Welbers and Wouter van Atteveldt. <code>rsyntax</code> is an general library for querying and reshaping dependency trees and was used to implement the rules contained in <code>semgram</code>. If you find yourself wanting to extract relations other than those incorporated in the <code>semgram</code> grammar and don’t mind implementing them from scratch, <code>rsyntax</code> is the way to go.</p>
 <pre class="r"><code>library(devtools)
 library(spacyr)
 
 ### Installing semgram
-devtools::install_github(&quot;review-account/semgram&quot;) # uncomment if you need to install semgram
+devtools::install_github(&quot;omstuhler/semgram&quot;) # uncomment if you need to install semgram
 library(semgram)</code></pre>
 </div>
 <div id="initialize-spacy-annotation-pipeline" class="section level1">
@@ -307,7 +307,7 @@ str(motifs)</code></pre>
 ##  $ possessions      : chr(0) 
 ##  $ agent_treatments : chr(0) 
 ##  $ action_Patients  : chr &quot;aP_win_tournament&quot;</code></pre>
-<p>We can pass multiple sentences or whole documents to <code>spacy_parse</code> and <code>extract_motifs</code> and specify multiple core entities. We can also vary a number of hyperparameters such as whether or not auxiliary verbs should be considered as action motifs (<code>get_aux_verbs</code>); motif markup should be provided (<code>markup</code>); or whether the motifs should be provided in token or lemma form (<code>extract</code>). Note that the specification of entities is case sensitive.</p>
+<p>We can pass multiple sentences or whole documents to <code>spacy_parse</code> and <code>extract_motifs</code> and specify multiple core entities. We can also vary a number of hyper-parameters such as whether or not auxiliary verbs should be considered as action motifs (<code>get_aux_verbs</code>); motif markup should be provided (<code>markup</code>); or whether the motifs should be provided in token or lemma form (<code>extract</code>). Note that the specification of entities is case sensitive.</p>
 <pre class="r"><code>text = &quot;The plan was announced early this week by Biden. The president&#39;s speech received criticism.&quot;
 tokens = spacy_parse(text, dependency = T)
 motifs = extract_motifs(tokens = spacy_parse(text, dependency=T), entities = c(&quot;Biden&quot;, &quot;president&quot;),
@@ -714,12 +714,12 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 11.59963 secs
+## Time difference of 10.74655 secs
 ## 
 ## Time fast mode:
-## Time difference of 2.579195 secs
+## Time difference of 2.672727 secs
 ## 
-## Time saved: 78 %</code></pre>
+## Time saved: 75 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
 <pre class="r"><code>cat(&quot;Total motifs in normal mode:&quot;,length(unlist(motifs)), &quot;\n&quot;)
 cat(&quot;Total motifs in fast mode:&quot;,length(unlist(motifs_fast)), &quot;\n&quot;)

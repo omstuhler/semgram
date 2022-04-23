@@ -12,14 +12,14 @@ For this demo of `semgram`, we will need `spacyr`, a wrapper around the popular 
 
 Furthermore, we will need `devtools` - a package for development tools we will use to install `semgram`.
 
-Finally, it shouldn't go without mention that `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`.
+Finally, it shouldn't go without mention that `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
 
 ```{r 1, message=FALSE}
 library(devtools)
 library(spacyr)
 
 ### Installing semgram
-devtools::install_github("review-account/semgram") # uncomment if you need to install semgram
+devtools::install_github("omstuhler/semgram") # uncomment if you need to install semgram
 library(semgram)
 ```
 
