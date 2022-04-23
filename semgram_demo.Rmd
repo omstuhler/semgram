@@ -14,11 +14,11 @@ Furthermore, we will need [`devtools`](https://cran.r-project.org/web/packages/d
 
 Finally, `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
 
-```{r 1, message=FALSE}
+```{r 1, message=FALSE, warning=FALSE}
 library(devtools)
 library(spacyr)
 
-### Installing semgram
+# Installing semgram
 devtools::install_github("omstuhler/semgram")
 library(semgram)
 ```
@@ -45,7 +45,7 @@ The output of `spacy_parse()` is a data frame in which rows correspond to tokens
 ```{r 3}
 text = "Emil chased the thief."
 tokens_df = spacy_parse(text, dependency=T, entity = F)
-knitr::kable(tokens_df, padding = 5)
+knitr::kable(tokens_df, format="markdown", digits=3)
 ```
 
 ## Extracting semantic motifs

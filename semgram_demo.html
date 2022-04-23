@@ -177,37 +177,8 @@ pre code {
 library(spacyr)
 
 ### Installing semgram
-devtools::install_github(&quot;omstuhler/semgram&quot;)</code></pre>
-<pre><code>## 
-##   
-   checking for file ‘/private/var/folders/nc/x7dld6s51954207trf5qt9cr0000gn/T/RtmpMxMASz/remotes2f213cd3b553/omstuhler-semgram-1b86369/DESCRIPTION’ ...
-  
-✓  checking for file ‘/private/var/folders/nc/x7dld6s51954207trf5qt9cr0000gn/T/RtmpMxMASz/remotes2f213cd3b553/omstuhler-semgram-1b86369/DESCRIPTION’
-## 
-  
-─  preparing ‘semgram’:
-## 
-  
-   checking DESCRIPTION meta-information ...
-  
-✓  checking DESCRIPTION meta-information
-## 
-  
-─  checking for LF line-endings in source and make files and shell scripts
-## 
-  
-─  checking for empty or unneeded directories
-## 
-  
-   Omitted ‘LazyData’ from DESCRIPTION
-## 
-  
-─  building ‘semgram_0.0.0.9000.tar.gz’
-## 
-  
-   
-## </code></pre>
-<pre class="r"><code>library(semgram)</code></pre>
+devtools::install_github(&quot;omstuhler/semgram&quot;)
+library(semgram)</code></pre>
 </div>
 <div id="initialize-spacy-annotation-pipeline" class="section level1">
 <h1>Initialize spaCy annotation pipeline</h1>
@@ -225,7 +196,7 @@ spacy_initialize(model = &quot;en_core_web_sm&quot;, refresh_settings = T)</code
 <p>The output of <code>spacy_parse()</code> is a data frame in which rows correspond to tokens. The <code>pos</code> column indicated the part of speech tag assigned to each token. The columns <code>head_token</code> and <code>dep_rel</code> present the output of the dependency parser module. Note how every token points to exactly one head token. “chase” is the root of the sentence and points to itself. “Emil” on the other hand, is the nominal subject (“nsubj”) of its head “chase”.</p>
 <pre class="r"><code>text = &quot;Emil chased the thief.&quot;
 tokens_df = spacy_parse(text, dependency=T, entity = F)
-knitr::kable(tokens_df, padding = 5)</code></pre>
+knitr::kable(tokens_df, format=&quot;markdown&quot;, digits=3)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -743,12 +714,12 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 17.50004 secs
+## Time difference of 11.55454 secs
 ## 
 ## Time fast mode:
-## Time difference of 3.759855 secs
+## Time difference of 2.823376 secs
 ## 
-## Time saved: 79 %</code></pre>
+## Time saved: 76 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
 <pre class="r"><code>cat(&quot;Total motifs in normal mode:&quot;,length(unlist(motifs)), &quot;\n&quot;)
 cat(&quot;Total motifs in fast mode:&quot;,length(unlist(motifs_fast)), &quot;\n&quot;)
