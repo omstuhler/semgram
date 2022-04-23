@@ -6,8 +6,6 @@ This repository hosts the ```semgram``` R package.
 
 `semgram` builds on functionalities of [`spacyr`](https://cran.r-project.org/web/packages/spacyr/index.html) for dependency parsing and [`rsyntax`](https://github.com/vanatteveldt/rsyntax) for implementing rules querying dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go.
 
-If you use semgram in your research, please cite as follows:
-
 ## Installation
 
 Assuming you have installed `devtools`, you can install the package by running the following code.
