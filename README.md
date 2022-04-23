@@ -1,4 +1,4 @@
-# semgram: package for extracting semantically rich relations from text
+# semgram: R package for extracting semantically rich relations from text
 
 This repository hosts the ```semgram``` R package.
 
