@@ -45,7 +45,7 @@ The output of `spacy_parse()` is a data frame in which rows correspond to tokens
 ```{r 3}
 text = "Emil chased the thief."
 tokens_df = spacy_parse(text, dependency=T, entity = F)
-knitr::kable(tokens_df)
+knitr::kable(tokens_df, format="markdown", digits=2)
 ```
 
 ## Extracting semantic motifs
