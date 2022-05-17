@@ -36,19 +36,22 @@ tokens_df
 
 The working horse of `semgram` is the `extract_motifs` function to which we pass an annotated tokens object. We also have to specify in which entity we are interested (here "Emil"). By default, `extract_motifs` extracts motifs for all motif classes. 
 
-In the example sentence, we find an action motif (a_chase), a patient motif (P_thief), as well as a composite action-Patient motif (aP_chase_thief). For some more functionalities, check out the [demo](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/semgram_demo.html).
+In the example sentence, we find an action motif (a_chase) and well as a composite action-Patient motif (aP_chase_thief). For some more functionalities, check out the [demo](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/semgram_demo.html).
 
 ```R
 extract_motifs(tokens = tokens_df, entities = c("Emil"))
 
 #> List of 8
-#>  $ acts             : chr "a_chase"
-#>  $ patients         : chr "P_thief"
-#>  $ treatments       : chr(0) 
-#>  $ agents           : chr(0) 
-#>  $ characterizations: chr(0) 
-#>  $ possessions      : chr(0) 
-#>  $ agent_treatments : chr(0) 
-#>  $ action_Patients  : chr "aP_chase_thief"
-
+#>  $actions   			doc_id		ann_id		Entity		action
+#>						text1		text1.1.1  	Emil  		chase
+#>  $treatments
+#>	character(0)
+#>  $characterizations
+#>	character(0)
+#>  $possessions
+#>	character(0)
+#>  $agent_treatments
+#>	character(0)
+#>  $action_Patients	doc_id		ann_id		Entity		action 		Patient
+#>						text1 		text1.1.2   Emil  		chase   	thief
 ```
