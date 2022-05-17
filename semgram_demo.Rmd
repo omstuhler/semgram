@@ -19,8 +19,7 @@ library(devtools)
 library(spacyr)
 
 # Installing semgram
-#devtools::install_github("omstuhler/semgram")
-devtools::install("~/Desktop/Development/semgram")
+devtools::install_github("omstuhler/semgram")
 
 library(semgram)
 ```
