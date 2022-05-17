@@ -5,6 +5,7 @@
 
 At_5 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
+                label = "Entity", fill = F,
                 parents(pos = c("NOUN", "PROPN", "PRON"), relation = c("nsubjpass", "dobj"),
                         parents(pos = "VERB",
                                 label = "treatment", fill = F,
@@ -20,12 +21,12 @@ At_5 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
                 )
   )
   
-  tokens = tokens %>% annotate_tqueries("query_At", rule, overwrite = T, copy = F)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
   
-  if(all(is.na(tokens$query_At))){
-    At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
   } else {
-    At_casted = cast_text(tokens, 'query_At', text_col = extract)
+    casted = cast_text(tokens, 'query', text_col = extract)
   }
-  return(At_casted)
+  return(casted)
 }

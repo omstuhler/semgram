@@ -2,8 +2,9 @@
 ##### Rule: Objects of have-verb with xcomp clause and noun and verb conjunct
 ##### Example: "Jonathan and ENTITY want to swim and have lunch." (lunch)
 
-H_10 = function(tokens, entities, verb_pos, agent_patient_pos){
+H_10 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
+                label = "Entity", fill = F,
                 parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
                         parents(pos = c("VERB", "AUX"),
                                 children(pos = "VERB", relation = "xcomp",
@@ -12,9 +13,9 @@ H_10 = function(tokens, entities, verb_pos, agent_patient_pos){
                                          children(pos = c("VERB", "AUX"), relation = "conj",
                                                   lemma = "have",
                                                   children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                           label = "Motif", fill = F,
+                                                           label = "Possession", fill = F,
                                                            children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                    label = "Motif", fill = F, depth = 3
+                                                                    label = "Possession", fill = F, depth = 3
                                                            )
                                                   )
                                          )
@@ -24,8 +25,11 @@ H_10 = function(tokens, entities, verb_pos, agent_patient_pos){
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("have_xcomp_act_obj_nconj_vconj", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

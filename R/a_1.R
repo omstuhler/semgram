@@ -7,27 +7,31 @@
 ##### E.g. in "ENTITY called and Joe answered." "answered" would be picked up as action of ENTITY if we just took conj-dependents.
 ##### To prevent this, we add a not_children condition to avoid cases where an independent subject is named.
 
-a_1 = function(tokens, entities, verb_pos, agent_patient_pos){
+a_1 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
+                label = "Entity", fill = F,
          parents(pos = verb_pos,
-                 label = "Motif", fill = F,
+                 label = "action", fill = F,
                  children(pos = verb_pos, relation = "conj", req = F,
                           not_children(relation = "nsubj", depth = 1),
-                          label = "Motif", fill = F,
+                          label = "action", fill = F,
                           children(get_aux_verbs_par = "YES",
                                    pos = verb_pos, relation = "aux", req = F,
-                                   label = "Motif", fill = F
+                                   label = "action", fill = F
                           )
                  ),
                  children(get_aux_verbs_par = "YES",
                           pos = verb_pos, relation = "aux", req = F,
-                          label = "Motif", fill = F
+                          label = "action", fill = F
                  )
          )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("nsubj_act_conj", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

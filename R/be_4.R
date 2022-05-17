@@ -4,16 +4,17 @@
 
 ##### Development note: be_4 and be_5 could easily be merged.
 
-be_4 = function(tokens, entities, verb_pos, agent_patient_pos){
+be_4 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
+                label = "Entity", fill = F,
                 parents(pos = c("VERB", "AUX"),
                         children(pos = c("AUX", "VERB"), relation = "conj",
                                  not_children(relation = "nsubj", depth = 1),
                                  children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("acomp", "attr"), phrase_replacement = NA,
-                                          label = "Motif",
+                                          label = "characterization",
                                           fill = F,
                                           children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("conj", "appos", "amod"), req = F, phrase_replacement = NA,
-                                                   label = "Motif",
+                                                   label = "characterization",
                                                    fill = F, depth = 3
                                           )
                                  )
@@ -21,8 +22,11 @@ be_4 = function(tokens, entities, verb_pos, agent_patient_pos){
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("being_adj_vconj", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

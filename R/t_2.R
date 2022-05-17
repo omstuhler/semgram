@@ -6,18 +6,22 @@
 ##### Note: We can't collect more verbs because based on the grammar, it will be
 ##### unclear whether these will be transitive.
 
-t_2 = function(tokens, entities, verb_pos, agent_patient_pos){
+t_2 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
+                label = "Entity", fill = F,
                 parents(relation = c("dobj", "dative"), pos = c("NOUN", "PROPN", "PRON"),
                         parents(pos = "VERB",
-                                label = "Motif",
+                                label = "treatment",
                                 fill = F
                         )
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("dobj_conj_treat", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

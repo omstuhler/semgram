@@ -2,17 +2,18 @@
 ##### Rule: Object of second conjuncted have verb
 ##### Example: "ENTITY came and had a cakes." (cake)
 
-H_5 = function(tokens, entities, verb_pos, agent_patient_pos){
+H_5 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
+                label = "Entity", fill = F,
                 parents(pos = c("VERB", "AUX"),
                         children(pos = c("VERB", "AUX"), relation = "conj",
                                  lemma = "have",
                                  not_children(relation = "nsubj", depth = 1),
                                  children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                          label = "Motif",
+                                          label = "Possession",
                                           fill = F,
                                           children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                   label = "Motif", req = F, depth = 3,
+                                                   label = "Possession", req = F, depth = 3,
                                                    fill = F
                                           )
                                  )
@@ -20,8 +21,11 @@ H_5 = function(tokens, entities, verb_pos, agent_patient_pos){
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("have_nsubj_conj_obj_act", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

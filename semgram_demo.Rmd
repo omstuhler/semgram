@@ -19,8 +19,8 @@ library(devtools)
 library(spacyr)
 
 # Installing semgram
-devtools::install_github("omstuhler/semgram")
-
+#devtools::install_github("omstuhler/semgram")
+devtools::install("~/Desktop/Development/semgram_with_triplet_function")
 library(semgram)
 ```
 
@@ -51,21 +51,21 @@ knitr::kable(tokens_df)
 
 ## Extracting semantic motifs
 
-The annotated tokens dataframe can now be passed to `semgram`'s `extract_motifs`. When doing so, we also need to specify which core entities we would like to extract motifs around. Here, we choose to extract motifs around "Emil".
+The annotated tokens dataframe can now be passed to `semgram`'s `extract_motifs`. When doing so, we also need to specify which core entities we would like to extract motifs around. Here, we choose to extract motifs around "Emil". `extract_motifs` returns a list of dataframes for each motif class for which we extracted motifs and for which motifs were found. `doc_id` and `ann_id` are inherited from the parsed tokens object, and allow to trace back where the motif occurred.
 
-The sentence we passed to `extract_motifs` contains three distinct motifs: the action motif a_chase, the patient motif P_thief, and the composite action-patient motif `aP_chase_thief`.
+The sentence we pass to `extract_motifs` contains two distinct motifs: the action motif     a_chase, and the composite action-patient motif aP_chase_thief. Note that patient motifs (such as P_thief) can be considered independently, if so desired.
 
-```{r 4}
-motifs = extract_motifs(tokens = tokens_df, entities = c("Emil"))
+```{r 4, results = "hold"}
+motifs = extract_motifs(tokens = tokens_df, entities = c("Emil"), markup = T)
 str(motifs)
 ```
 
-Moving forward, we extract motifs from a more complex sentence, again first passing the sentence through the spaCy annotation pipeline and specifying "Emil" as the core entity. We find that the sentence contains seven distinct motifs: the action motifs "a_start", "a_run", and "a_chase"; the patient motif "P_thief"; the characterization motifs "be_friend" and "be_brave"; and the composite action-patient motif "aP_chase_thief".
+Moving forward, we extract motifs from a more complex sentence, again first passing the sentence through the spaCy annotation pipeline and specifying "Emil" as the core entity. We find that the sentence contains six distinct motifs: the action motifs "a_start", "a_run", and "a_chase"; the characterization motifs "be_friend" and "be_brave"; and the composite action-patient motif "aP_chase_thief".
 
-```{r 5}
-text = "Gustav and his brave friend Emil started to run and chased the thief."
-tokens_df = spacy_parse(text, dependency=T)
-motifs = extract_motifs(tokens = tokens_df, entities = c("Emil"))
+```{r 5, results = "hold"}
+text = "Gustav and his brave friend, Emil, started to run and chased the thief."
+tokens_df = spacy_parse(text, dependency = T)
+motifs = extract_motifs(tokens = tokens_df, entities = c("Emil"), markup = T)
 str(motifs)
 ```
 
@@ -82,20 +82,30 @@ str(motifs)
 We can pass multiple sentences or whole documents to `spacy_parse` and `extract_motifs` and specify multiple core entities. We can also vary a number of hyper-parameters such as whether or not auxiliary verbs should be considered as action motifs (`get_aux_verbs`); motif markup should be provided (`markup`); or whether the motifs should be provided in token or lemma form (`extract`).
 Note that the specification of entities is case sensitive.
 
-```{r 7}
+```{r 7, results = "hold"}
 text = "The plan was announced early this week by Biden. The president's speech received criticism."
 tokens = spacy_parse(text, dependency = T)
-motifs = extract_motifs(tokens = spacy_parse(text, dependency=T), entities = c("Biden", "president"),
+motifs = extract_motifs(tokens = tokens, entities = c("Biden", "president"),
                         parse_multi_token_entities = T,
                         get_aux_verbs = T,
                         extract = "token",
                         markup = F)
 str(motifs)
 ```
+Finally, there may be instances in which we don't want to extract motifs around specific entities but rather all kinds of motifs. This can be achieved by setting entities to `*`. To demonstrate this, we use the same sentence as before. 
+
+Note that intuitively, entity-action-patient triplets and agent-treatment-entity triplets should be equivalent (as is the case in the sentence parsed here). However, certain features of the syntactic trees make it harder to reliably "climb backwards" in the treatment direction, which is why entity-action-patient extraction is slightly more comprehensive. If the decomposition of a text into semantic triplets is what you are after, it is recommended that you go with the entity-action-patient motifs, rather than the agent-treatment-entity ones.
+
+```{r 7b, results = "hold"}
+motifs = extract_motifs(tokens = tokens, entities = "*")
+str(motifs)
+```
+
+
 
 ## Reproducing Table 2
 
-Table 2 of the manuscript 'Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry' showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to 'extract_motifs'. To do this, we first create a dataframe with all 48 sentences, together with the corresponding motif class. In order to make the text more realistic, we replace "ENTITY" with "Emil."
+Table 2 of the manuscript 'Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry' showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to 'extract_motifs'. To do this, we first create a dataframe with all sentences, together with the corresponding motif class. In order to make the text more realistic, we replace "ENTITY" with "Emil." Because Patient (Agent) motifs are contained in the action-Patient (Agent-treatment) motifs, we only extract the composite motifs here which should, however, be equivalent.
 
 ```{r 8}
 actions = data.frame("Motif class" = "a",
@@ -109,16 +119,17 @@ actions = data.frame("Motif class" = "a",
                                     "Emil wants you to call.")
                      )
 
-patients = data.frame("Motif class" = "P",
-                     "Sentence" = c("Emil asks John.",
-                                    "Peter and Emil ask John.",
-                                    "My friend Emil asks John.",
-                                    "Emil came and asked John.",
-                                    "Emil wants to ask John.",
-                                    "Emil calls John, Jane, and Steve.",
-                                    "Emil asks John a question.",
-                                    "John is asked by Emil")
-                     )
+action_patient = data.frame("Motif class" = "aP",
+                            "Sentence" = c("Emil asks John.",
+                                           "Peter and Emil ask John.",
+                                           "My friend Emil asks John.",
+                                           "Emil came and asked John.",
+                                           "Emil wants to ask John.",
+                                           "Emil calls John, Jane, and Steve.",
+                                           "Emil asks John a question.",
+                                           "John is asked by Emil",
+                                           "Emil made and ate a cake.")
+                            )
 
 treatments = data.frame("Motif class" = "t",
                      "Sentence" = c("John calls Emil.",
@@ -129,15 +140,16 @@ treatments = data.frame("Motif class" = "t",
                                     "Emil was called.")
                      )
 
-agents = data.frame("Motif class" = "A",
-                     "Sentence" = c("John calls Emil."
-                                    ,"John gives Peter an Emil."
-                                    ,"Peter and John ask Emil."
-                                    ,"Emil is asked by  John."
-                                    ,"John came and asked  Emil."
-                                    ,"John wants to ask Emil."
-                                    ,"My friend John asked your brother Emil.")
-                     )
+agent_treatment = data.frame("Motif class" = "At",
+                             "Sentence" = c("John asks Emil.",
+                                            "John calls Emil.",
+                                            "John gives Peter an Emil.",
+                                            "Peter and John ask Emil.",
+                                            "Emil is asked by  John.",
+                                            "John came and asked  Emil.",
+                                            "John wants to ask Emil.",
+                                            "My friend John asked your brother Emil.")
+                             )
 
 characterizations  = data.frame("Motif class" = "be",
                                "Sentence" = c("Emil is kind.",
@@ -161,17 +173,12 @@ possessions = data.frame("Motif class" = "H",
                                     "Emil has friends and enemies.")
                      )
 
-action_patient = data.frame("Motif class" = "aP",
-                            "Sentence" = c("Emil asks John.",
-                                           "Emil made and ate a cake.")
-                            )
-agent_treatment = data.frame("Motif class" = "At",
-                             "Sentence" = "John asks Emil.")
 
-df = rbind(actions, patients, 
-           treatments, agents,
-           characterizations, possessions,
-           action_patient, agent_treatment)
+df = rbind(actions, 
+           action_patient,
+           treatments, 
+           agent_treatment,
+           characterizations, possessions)
 ```
 
 Next, we create a function that combines the task of parsing the sentence with `spacy_parse` and extracting motifs via `extract_motifs`. The function takes two inputs: the text from which to extract the motifs and the motif class to look for in the respective sentence. The core entity is specified as "Emil" for all sentences. Note that some of the sentences contain motifs from multiple classes, but here we only extract one motif class per sentence to reproduce Table 2 of the paper. We also specify that auxiliary verbs should be considered as actions (`get_aux_verbs = T`) to match the extractions in the paper.
@@ -185,9 +192,9 @@ annotate_and_extract = function(text, motif_class){
   # Extract the respective motif
   motifs = extract_motifs(tokens = spacy_parse(text, dependency = T), 
                           entities = "Emil", motif_classes = motif_class,
-                          aux_verb_markup = T, verbose = F,
+                          aux_verb_markup = T, verbose = F, markup = T,
                           get_aux_verbs = T)
-  unname(unlist(motifs))
+  unlist(motifs[[which.max(lengths(motifs))]]$markup)
 }
 ```
 
@@ -202,35 +209,29 @@ knitr::kable(df)
 
 ## Fast motif extraction
 
-The extraction rules in `semgram` aim for comprehensiveness, so that motifs are correctly identified even in complex sentences like those shown above. However, the majority of extracted motifs are extracted by rather simple rules. `extract_motifs` offers an option for speeding up the extraction process which can be accessed by setting `fast = TRUE`. In fast mode, we drop a few of the extraction rules written for very specific syntactic patterns. By doing so, we miss some of the motifs we could have extracted but we do this for the advantage of considerably decreased run time.
+The extraction rules in `semgram` aim for comprehensiveness, so that motifs are correctly identified even in syntactically complex sentences like those shown above. However, the majority of extracted motifs are extracted by rather simple rules. `extract_motifs` offers an option for speeding up the extraction process which can be accessed by setting `fast = TRUE`. In fast mode, we drop a few of the extraction rules written for very specific syntactic patterns. By doing so, we miss some of the motifs we could have extracted but we do this for the advantage of considerably decreased run time.
 
-To demonstrate this, we will first download a book using the `gutenbergr` library, which provides quick access to the works collected by the [Project Gutenberg](https://www.gutenberg.org). Specifically, we access Balzac's short story "Sarrasine" - you may choose another work, of course. We collapse the book into a long string and pass it through the `spacyr` annotation pipeline.
+To demonstrate this, we will first download a book using the `gutenbergr` library, which provides quick access to the works collected by [Project Gutenberg](https://www.gutenberg.org). Specifically, we access Balzac's short story "Sarrasine" - you may choose another work, of course. We collapse the book into a long string and pass it through the `spacyr` annotation pipeline. Note that sometimes, the gutenberg server is down and you might have to select a different mirror, a list of which can be found [here](https://www.gutenberg.org/MIRRORS.ALL).
 
 ```{r 11, message=FALSE}
 library(gutenbergr)
-sarrasine <- gutenberg_download(1826)
+sarrasine <- gutenberg_download(1826, mirror = "https://gutenberg.pglaf.org/")
 sarrasine_text = paste0(sarrasine$text, collapse = " ")
 tokens_df = spacy_parse(sarrasine_text, dependency=T)
 ```
 
-For demo purposes, we simply extract all motifs around pronouns. We do this once in the normal extraction mode and once in fast extraction mode.
+For demo purposes, we simply extract all motifs around any entity. We do this once in the normal extraction mode and once in fast extraction mode.
 
 ```{r 13}
 time = Sys.time()
 motifs = extract_motifs(tokens_df, 
-                        entities = c("I", "my", "me", "you", "your", 
-                                     "he", "him", "his", "she", "her",
-                                     "we", "our",
-                                     "they", "their", "them"),
+                        entities = c("*"),
                         pron_as_ap = T)
 time_gap = Sys.time()-time
 
 time = Sys.time()
 motifs_fast = extract_motifs(tokens_df, 
-                             entities = c("I", "my", "me", "you", "your", 
-                                          "he", "him", "his", "she", "her",
-                                          "we", "our",
-                                          "they", "their", "them"),
+                             entities = c("*"),
                              pron_as_ap = T,
                              fast = T)
 time_gap_fast = Sys.time()-time
@@ -252,13 +253,17 @@ cat("\nTime saved:",
 Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.
 
 ```{r 15, results = "hold"}
-cat("Total motifs in normal mode:",length(unlist(motifs)), "\n")
-cat("Total motifs in fast mode:",length(unlist(motifs_fast)), "\n")
+n_slow = sum(unlist(lapply(motifs, function(x) nrow(x))))
+n_fast = sum(unlist(lapply(motifs_fast, function(x) nrow(x))))
+
+
+cat("Total motifs in normal mode:", n_slow, "\n")
+cat("Total motifs in fast mode:", n_fast, "\n")
 cat("Percentage of motifs extracted in fast mode: ",
-    round(length(unlist(motifs_fast))/length(unlist(motifs)),4)*100,"\n\n")
+    round(n_fast/n_slow,4)*100,"\n\n")
 
 print("Percentage of motifs extracted in fast mode by category:\n")
-round(lengths(motifs_fast)/lengths(motifs),3)*100
+round(unlist(lapply(motifs_fast, function(x) nrow(x)))/unlist(lapply(motifs, function(x) nrow(x))),3)*100
 ```
 
 

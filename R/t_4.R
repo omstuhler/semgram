@@ -3,15 +3,21 @@
 ##### Example: "Sue and ENTITY are asked." (asked)
 ##### Example: "Steve were given apples and ENTITY." (given)
 
-t_4 = function(tokens, entities, verb_pos, agent_patient_pos){
+t_4 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("nsubjpass"),
-                parents(pos = "VERB",
-                        label = "Motif", fill = F
+                label = "Entity", fill = F,
+                parents(pos = c("NOUN", "PROPN", "PRON"), relation = c("nsubjpass"),
+                        parents(pos = "VERB",
+                                label = "treatment", fill = F
+                        )
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("obj_of_by_act_nconj", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

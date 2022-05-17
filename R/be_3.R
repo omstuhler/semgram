@@ -2,15 +2,19 @@
 ##### Rule: Appos parents
 ##### Example: "My friend ENTITY came." (friend)
 
-be_3 = function(tokens, entities, verb_pos, agent_patient_pos){
-  rule = tquery(appos_child = "appos_child",
-                phrase_replacement = NA,
-                label = "Motif",
-                fill = F
-  )
+be_3 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   
-  tokens = tokens %>%
-    annotate_tqueries("appos_char", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  rule = tquery(token = entities, relation = "appos",
+                label = "Entity", fill = F,
+                       parents(pos = c("NOUN", "PROPN", "PRON"), NOT(token = entities),
+                               label = "characterization", fill = F
+                       )
+  )
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

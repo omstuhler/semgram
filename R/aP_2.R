@@ -6,8 +6,9 @@
 
 aP_2 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
+                label = "Entity", fill = F,
                 parents(pos = agent_patient_pos, relation = "nsubj",
-                        parents(pos = c("VERB", "AUX"), label = "act", fill = F,
+                        parents(pos = c("VERB", "AUX"), label = "action", fill = F,
                                 NOT(lemma = "have"),
                                 children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Patient",
                                          fill = F,
@@ -20,12 +21,12 @@ aP_2 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
                 )
   )
   
-  tokens = tokens %>% annotate_tqueries("query_aP", rule, overwrite = T, copy = F)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
   
-  if(all(is.na(tokens$query_aP))){
-    aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
   } else {
-    aP_casted = cast_text(tokens, 'query_aP', text_col = extract)
+    casted = cast_text(tokens, 'query', text_col = extract)
   }
-  return(aP_casted)
+  return(casted)
 }

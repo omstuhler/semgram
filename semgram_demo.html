@@ -177,8 +177,8 @@ pre code {
 library(spacyr)
 
 # Installing semgram
-devtools::install_github(&quot;omstuhler/semgram&quot;)
-
+#devtools::install_github(&quot;omstuhler/semgram&quot;)
+devtools::install(&quot;~/Desktop/Development/semgram_with_triplet_function&quot;)
 library(semgram)</code></pre>
 </div>
 <div id="initialize-spacy-annotation-pipeline" class="section level1">
@@ -266,70 +266,143 @@ knitr::kable(tokens_df)</code></pre>
 </table>
 <div id="extracting-semantic-motifs" class="section level2">
 <h2>Extracting semantic motifs</h2>
-<p>The annotated tokens dataframe can now be passed to <code>semgram</code>’s <code>extract_motifs</code>. When doing so, we also need to specify which core entities we would like to extract motifs around. Here, we choose to extract motifs around “Emil”.</p>
-<p>The sentence we passed to <code>extract_motifs</code> contains three distinct motifs: the action motif a_chase, the patient motif P_thief, and the composite action-patient motif <code>aP_chase_thief</code>.</p>
-<pre class="r"><code>motifs = extract_motifs(tokens = tokens_df, entities = c(&quot;Emil&quot;))
+<p>The annotated tokens dataframe can now be passed to <code>semgram</code>’s <code>extract_motifs</code>. When doing so, we also need to specify which core entities we would like to extract motifs around. Here, we choose to extract motifs around “Emil”. <code>extract_motifs</code> returns a list of dataframes for each motif class for which we extracted motifs and for which motifs were found. <code>doc_id</code> and <code>ann_id</code> are inherited from the parsed tokens object, and allow to trace back where the motif occurred.</p>
+<p>The sentence we pass to <code>extract_motifs</code> contains two distinct motifs: the action motif a_chase, and the composite action-patient motif aP_chase_thief. Note that patient motifs (such as P_thief) can be considered independently, if so desired.</p>
+<pre class="r"><code>motifs = extract_motifs(tokens = tokens_df, entities = c(&quot;Emil&quot;), markup = T)
 str(motifs)</code></pre>
-<pre><code>## List of 8
-##  $ acts             : chr &quot;a_chase&quot;
-##  $ patients         : chr &quot;P_thief&quot;
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.1&quot;: 1
+##   ..$ Entity: chr &quot;Emil&quot;
+##   ..$ action: chr &quot;chase&quot;
+##   ..$ markup: chr &quot;a_chase&quot;
 ##  $ treatments       : chr(0) 
-##  $ agents           : chr(0) 
 ##  $ characterizations: chr(0) 
 ##  $ possessions      : chr(0) 
 ##  $ agent_treatments : chr(0) 
-##  $ action_Patients  : chr &quot;aP_chase_thief&quot;</code></pre>
-<p>Moving forward, we extract motifs from a more complex sentence, again first passing the sentence through the spaCy annotation pipeline and specifying “Emil” as the core entity. We find that the sentence contains seven distinct motifs: the action motifs “a_start”, “a_run”, and “a_chase”; the patient motif “P_thief”; the characterization motifs “be_friend” and “be_brave”; and the composite action-patient motif “aP_chase_thief”.</p>
-<pre class="r"><code>text = &quot;Gustav and his brave friend Emil started to run and chased the thief.&quot;
-tokens_df = spacy_parse(text, dependency=T)
-motifs = extract_motifs(tokens = tokens_df, entities = c(&quot;Emil&quot;))
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  6 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.2&quot;: 1
+##   ..$ Entity : chr &quot;Emil&quot;
+##   ..$ action : chr &quot;chase&quot;
+##   ..$ Patient: chr &quot;thief&quot;
+##   ..$ markup : chr &quot;aP_chase_thief&quot;</code></pre>
+<p>Moving forward, we extract motifs from a more complex sentence, again first passing the sentence through the spaCy annotation pipeline and specifying “Emil” as the core entity. We find that the sentence contains six distinct motifs: the action motifs “a_start”, “a_run”, and “a_chase”; the characterization motifs “be_friend” and “be_brave”; and the composite action-patient motif “aP_chase_thief”.</p>
+<pre class="r"><code>text = &quot;Gustav and his brave friend, Emil, started to run and chased the thief.&quot;
+tokens_df = spacy_parse(text, dependency = T)
+motifs = extract_motifs(tokens = tokens_df, entities = c(&quot;Emil&quot;), markup = T)
 str(motifs)</code></pre>
-<pre><code>## List of 8
-##  $ acts             : chr [1:3] &quot;a_start&quot; &quot;a_run&quot; &quot;a_chase&quot;
-##  $ patients         : chr &quot;P_thief&quot;
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   3 obs. of  5 variables:
+##   ..$ doc_id: chr [1:3] &quot;text1&quot; &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.5&quot;: 1 1 1
+##   ..$ Entity: chr [1:3] &quot;friend&quot; &quot;friend&quot; &quot;friend&quot;
+##   ..$ action: chr [1:3] &quot;start&quot; &quot;run&quot; &quot;chase&quot;
+##   ..$ markup: chr [1:3] &quot;a_start&quot; &quot;a_run&quot; &quot;a_chase&quot;
 ##  $ treatments       : chr(0) 
-##  $ agents           : chr(0) 
-##  $ characterizations: chr(0) 
+##  $ characterizations:&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id          : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id          : Factor w/ 2 levels &quot;text1.1.7&quot;,&quot;text1.1.5&quot;: 1 2
+##   ..$ Entity          : chr [1:2] &quot;Emil&quot; &quot;friend&quot;
+##   ..$ characterization: chr [1:2] &quot;friend&quot; &quot;brave&quot;
+##   ..$ markup          : chr [1:2] &quot;be_friend&quot; &quot;be_brave&quot;
 ##  $ possessions      : chr(0) 
 ##  $ agent_treatments : chr(0) 
-##  $ action_Patients  : chr &quot;aP_chase_thief&quot;</code></pre>
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  6 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.5&quot;: 1
+##   ..$ Entity : chr &quot;friend&quot;
+##   ..$ action : chr &quot;chase&quot;
+##   ..$ Patient: chr &quot;thief&quot;
+##   ..$ markup : chr &quot;aP_chase_thief&quot;</code></pre>
 <p>We can also specify multi-token core entities, provided that <code>parse_multi_token_entities</code> is set to <code>TRUE</code> (the default).</p>
 <pre class="r"><code>text = &quot;Harry Potter won the tournament.&quot;
 tokens = spacy_parse(text, dependency=T)
 motifs = extract_motifs(tokens = spacy_parse(text, dependency=T), entities = c(&quot;Harry Potter&quot;),
                         parse_multi_token_entities = T)
 str(motifs)</code></pre>
-<pre><code>## List of 8
-##  $ acts             : chr &quot;a_win&quot;
-##  $ patients         : chr &quot;P_tournament&quot;
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.2&quot;: 1
+##   ..$ Entity: chr &quot;Potter&quot;
+##   ..$ action: chr &quot;win&quot;
 ##  $ treatments       : chr(0) 
-##  $ agents           : chr(0) 
 ##  $ characterizations: chr(0) 
 ##  $ possessions      : chr(0) 
 ##  $ agent_treatments : chr(0) 
-##  $ action_Patients  : chr &quot;aP_win_tournament&quot;</code></pre>
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.3&quot;: 1
+##   ..$ Entity : chr &quot;Potter&quot;
+##   ..$ action : chr &quot;win&quot;
+##   ..$ Patient: chr &quot;tournament&quot;</code></pre>
 <p>We can pass multiple sentences or whole documents to <code>spacy_parse</code> and <code>extract_motifs</code> and specify multiple core entities. We can also vary a number of hyper-parameters such as whether or not auxiliary verbs should be considered as action motifs (<code>get_aux_verbs</code>); motif markup should be provided (<code>markup</code>); or whether the motifs should be provided in token or lemma form (<code>extract</code>). Note that the specification of entities is case sensitive.</p>
 <pre class="r"><code>text = &quot;The plan was announced early this week by Biden. The president&#39;s speech received criticism.&quot;
 tokens = spacy_parse(text, dependency = T)
-motifs = extract_motifs(tokens = spacy_parse(text, dependency=T), entities = c(&quot;Biden&quot;, &quot;president&quot;),
+motifs = extract_motifs(tokens = tokens, entities = c(&quot;Biden&quot;, &quot;president&quot;),
                         parse_multi_token_entities = T,
                         get_aux_verbs = T,
                         extract = &quot;token&quot;,
                         markup = F)
 str(motifs)</code></pre>
-<pre><code>## List of 8
-##  $ acts             : chr &quot;announced&quot;
-##  $ patients         : chr &quot;plan&quot;
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##   ..$ Entity: chr &quot;Biden&quot;
+##   ..$ action: chr &quot;announced&quot;
 ##  $ treatments       : chr(0) 
-##  $ agents           : chr(0) 
 ##  $ characterizations: chr(0) 
-##  $ possessions      : chr &quot;speech&quot;
+##  $ possessions      :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id    : chr &quot;text1&quot;
+##   ..$ ann_id    : Factor w/ 1 level &quot;text1.2.2&quot;: 1
+##   ..$ Entity    : chr &quot;president&quot;
+##   ..$ Possession: chr &quot;speech&quot;
 ##  $ agent_treatments : chr(0) 
-##  $ action_Patients  : chr &quot;announced_plan&quot;</code></pre>
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##   ..$ Entity : chr &quot;Biden&quot;
+##   ..$ action : chr &quot;announced&quot;
+##   ..$ Patient: chr &quot;plan&quot;</code></pre>
+<p>Finally, there may be instances in which we don’t want to extract motifs around specific entities but rather all kinds of motifs. This can be achieved by setting entities to <code>*</code>. To demonstrate this, we use the same sentence as before.</p>
+<pre class="r"><code>motifs = extract_motifs(tokens = tokens, entities = &quot;*&quot;)
+str(motifs)</code></pre>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   2 obs. of  4 variables:
+##   ..$ doc_id: chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 2 levels &quot;text1.2.4&quot;,&quot;text1.1.9&quot;: 1 2
+##   ..$ Entity: chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ action: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ treatments       :&#39;data.frame&#39;:   2 obs. of  4 variables:
+##   ..$ doc_id   : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id   : Factor w/ 2 levels &quot;text1.2.6&quot;,&quot;text1.1.2&quot;: 1 2
+##   ..$ Entity   : chr [1:2] &quot;criticism&quot; &quot;plan&quot;
+##   ..$ treatment: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ characterizations: chr(0) 
+##  $ possessions      :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id    : chr &quot;text1&quot;
+##   ..$ ann_id    : Factor w/ 1 level &quot;text1.2.2&quot;: 1
+##   ..$ Entity    : chr &quot;president&quot;
+##   ..$ Possession: chr &quot;speech&quot;
+##  $ agent_treatments :&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id   : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id   : Factor w/ 2 levels &quot;text1.2.5&quot;,&quot;text1.1.4&quot;: 1 2
+##   ..$ Entity   : chr [1:2] &quot;criticism&quot; &quot;plan&quot;
+##   ..$ Agent    : chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ treatment: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ action_Patients  :&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 2 levels &quot;text1.2.5&quot;,&quot;text1.1.9&quot;: 1 2
+##   ..$ Entity : chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ action : chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##   ..$ Patient: chr [1:2] &quot;criticism&quot; &quot;plan&quot;</code></pre>
 </div>
 <div id="reproducing-table-2" class="section level2">
 <h2>Reproducing Table 2</h2>
-<p>Table 2 of the manuscript ‘Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry’ showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all 48 sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.”</p>
+<p>Table 2 of the manuscript ‘Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry’ showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.” Because Patient (Agent) motifs are contained in the action-Patient (Agent-treatment) motifs, we only extract the composite motifs here which should, however, be equivalent.</p>
 <pre class="r"><code>actions = data.frame(&quot;Motif class&quot; = &quot;a&quot;,
                      &quot;Sentence&quot; = c(&quot;Emil calls.&quot;,
                                     &quot;Emil can call.&quot;,
@@ -341,16 +414,17 @@ str(motifs)</code></pre>
                                     &quot;Emil wants you to call.&quot;)
                      )
 
-patients = data.frame(&quot;Motif class&quot; = &quot;P&quot;,
-                     &quot;Sentence&quot; = c(&quot;Emil asks John.&quot;,
-                                    &quot;Peter and Emil ask John.&quot;,
-                                    &quot;My friend Emil asks John.&quot;,
-                                    &quot;Emil came and asked John.&quot;,
-                                    &quot;Emil wants to ask John.&quot;,
-                                    &quot;Emil calls John, Jane, and Steve.&quot;,
-                                    &quot;Emil asks John a question.&quot;,
-                                    &quot;John is asked by Emil&quot;)
-                     )
+action_patient = data.frame(&quot;Motif class&quot; = &quot;aP&quot;,
+                            &quot;Sentence&quot; = c(&quot;Emil asks John.&quot;,
+                                           &quot;Peter and Emil ask John.&quot;,
+                                           &quot;My friend Emil asks John.&quot;,
+                                           &quot;Emil came and asked John.&quot;,
+                                           &quot;Emil wants to ask John.&quot;,
+                                           &quot;Emil calls John, Jane, and Steve.&quot;,
+                                           &quot;Emil asks John a question.&quot;,
+                                           &quot;John is asked by Emil&quot;,
+                                           &quot;Emil made and ate a cake.&quot;)
+                            )
 
 treatments = data.frame(&quot;Motif class&quot; = &quot;t&quot;,
                      &quot;Sentence&quot; = c(&quot;John calls Emil.&quot;,
@@ -361,15 +435,16 @@ treatments = data.frame(&quot;Motif class&quot; = &quot;t&quot;,
                                     &quot;Emil was called.&quot;)
                      )
 
-agents = data.frame(&quot;Motif class&quot; = &quot;A&quot;,
-                     &quot;Sentence&quot; = c(&quot;John calls Emil.&quot;
-                                    ,&quot;John gives Peter an Emil.&quot;
-                                    ,&quot;Peter and John ask Emil.&quot;
-                                    ,&quot;Emil is asked by  John.&quot;
-                                    ,&quot;John came and asked  Emil.&quot;
-                                    ,&quot;John wants to ask Emil.&quot;
-                                    ,&quot;My friend John asked your brother Emil.&quot;)
-                     )
+agent_treatment = data.frame(&quot;Motif class&quot; = &quot;At&quot;,
+                             &quot;Sentence&quot; = c(&quot;John asks Emil.&quot;,
+                                            &quot;John calls Emil.&quot;,
+                                            &quot;John gives Peter an Emil.&quot;,
+                                            &quot;Peter and John ask Emil.&quot;,
+                                            &quot;Emil is asked by  John.&quot;,
+                                            &quot;John came and asked  Emil.&quot;,
+                                            &quot;John wants to ask Emil.&quot;,
+                                            &quot;My friend John asked your brother Emil.&quot;)
+                             )
 
 characterizations  = data.frame(&quot;Motif class&quot; = &quot;be&quot;,
                                &quot;Sentence&quot; = c(&quot;Emil is kind.&quot;,
@@ -393,17 +468,12 @@ possessions = data.frame(&quot;Motif class&quot; = &quot;H&quot;,
                                     &quot;Emil has friends and enemies.&quot;)
                      )
 
-action_patient = data.frame(&quot;Motif class&quot; = &quot;aP&quot;,
-                            &quot;Sentence&quot; = c(&quot;Emil asks John.&quot;,
-                                           &quot;Emil made and ate a cake.&quot;)
-                            )
-agent_treatment = data.frame(&quot;Motif class&quot; = &quot;At&quot;,
-                             &quot;Sentence&quot; = &quot;John asks Emil.&quot;)
 
-df = rbind(actions, patients, 
-           treatments, agents,
-           characterizations, possessions,
-           action_patient, agent_treatment)</code></pre>
+df = rbind(actions, 
+           action_patient,
+           treatments, 
+           agent_treatment,
+           characterizations, possessions)</code></pre>
 <p>Next, we create a function that combines the task of parsing the sentence with <code>spacy_parse</code> and extracting motifs via <code>extract_motifs</code>. The function takes two inputs: the text from which to extract the motifs and the motif class to look for in the respective sentence. The core entity is specified as “Emil” for all sentences. Note that some of the sentences contain motifs from multiple classes, but here we only extract one motif class per sentence to reproduce Table 2 of the paper. We also specify that auxiliary verbs should be considered as actions (<code>get_aux_verbs = T</code>) to match the extractions in the paper.</p>
 <pre class="r"><code>annotate_and_extract = function(text, motif_class){
   
@@ -413,9 +483,9 @@ df = rbind(actions, patients,
   # Extract the respective motif
   motifs = extract_motifs(tokens = spacy_parse(text, dependency = T), 
                           entities = &quot;Emil&quot;, motif_classes = motif_class,
-                          aux_verb_markup = T, verbose = F,
+                          aux_verb_markup = T, verbose = F, markup = T,
                           get_aux_verbs = T)
-  unname(unlist(motifs))
+  unlist(motifs[[which.max(lengths(motifs))]]$markup)
 }</code></pre>
 <p>Finally, we pass the sentences and corresponding motif class to <code>mapply</code> to extract motifs for each sentence. The extraction results should be identical with those shown in Table 2 of the paper.</p>
 <pre class="r"><code>df$Extract = mapply(function(X,Y) {annotate_and_extract(text = X, motif_class = Y)},
@@ -424,9 +494,9 @@ df = rbind(actions, patients,
 knitr::kable(df)</code></pre>
 <table>
 <colgroup>
-<col width="13%" />
-<col width="54%" />
-<col width="31%" />
+<col width="11%" />
+<col width="47%" />
+<col width="41%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -477,109 +547,119 @@ knitr::kable(df)</code></pre>
 <td align="left">a_want</td>
 </tr>
 <tr class="odd">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Emil asks John.</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="even">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Peter and Emil ask John.</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="odd">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">My friend Emil asks John.</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="even">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Emil came and asked John.</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="odd">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Emil wants to ask John.</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="even">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Emil calls John, Jane, and Steve.</td>
-<td align="left">P_John , P_Jane , P_Steve</td>
+<td align="left">aP_call_John , aP_call_Jane , aP_call_Steve</td>
 </tr>
 <tr class="odd">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">Emil asks John a question.</td>
-<td align="left">P_John , P_question</td>
+<td align="left">aP_ask_John , aP_ask_question</td>
 </tr>
 <tr class="even">
-<td align="left">P</td>
+<td align="left">aP</td>
 <td align="left">John is asked by Emil</td>
-<td align="left">P_John</td>
+<td align="left">aP_ask_John</td>
 </tr>
 <tr class="odd">
+<td align="left">aP</td>
+<td align="left">Emil made and ate a cake.</td>
+<td align="left">aP_eat_cake</td>
+</tr>
+<tr class="even">
 <td align="left">t</td>
 <td align="left">John calls Emil.</td>
 <td align="left">t_call</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">t</td>
 <td align="left">John gives Emil an apple.</td>
 <td align="left">t_give</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">t</td>
 <td align="left">John gives Peter an Emil.</td>
 <td align="left">t_give</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">t</td>
 <td align="left">John calls Peter and Emil.</td>
 <td align="left">t_call</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">t</td>
 <td align="left">John gave Peter an apple and Emil.</td>
 <td align="left">t_give</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">t</td>
 <td align="left">Emil was called.</td>
-<td align="left">t_call, t_call</td>
+<td align="left">t_call</td>
+</tr>
+<tr class="even">
+<td align="left">At</td>
+<td align="left">John asks Emil.</td>
+<td align="left">At_John_ask</td>
 </tr>
 <tr class="odd">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">John calls Emil.</td>
-<td align="left">A_John</td>
+<td align="left">At_John_call</td>
 </tr>
 <tr class="even">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">John gives Peter an Emil.</td>
-<td align="left">A_John</td>
+<td align="left">At_John_give</td>
 </tr>
 <tr class="odd">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">Peter and John ask Emil.</td>
-<td align="left">A_Peter, A_John</td>
+<td align="left">At_Peter_ask, At_John_ask</td>
 </tr>
 <tr class="even">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">Emil is asked by John.</td>
-<td align="left">A_John</td>
+<td align="left">At_John_ask</td>
 </tr>
 <tr class="odd">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">John came and asked Emil.</td>
-<td align="left">A_John</td>
+<td align="left">At_John_ask</td>
 </tr>
 <tr class="even">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">John wants to ask Emil.</td>
-<td align="left">A_John</td>
+<td align="left">At_John_ask</td>
 </tr>
 <tr class="odd">
-<td align="left">A</td>
+<td align="left">At</td>
 <td align="left">My friend John asked your brother Emil.</td>
-<td align="left">A_friend, A_John</td>
+<td align="left">At_friend_ask, At_John_ask</td>
 </tr>
 <tr class="even">
 <td align="left">be</td>
@@ -661,48 +741,27 @@ knitr::kable(df)</code></pre>
 <td align="left">Emil has friends and enemies.</td>
 <td align="left">H_friend, H_enemy</td>
 </tr>
-<tr class="even">
-<td align="left">aP</td>
-<td align="left">Emil asks John.</td>
-<td align="left">aP_ask_John</td>
-</tr>
-<tr class="odd">
-<td align="left">aP</td>
-<td align="left">Emil made and ate a cake.</td>
-<td align="left">aP_eat_cake</td>
-</tr>
-<tr class="even">
-<td align="left">At</td>
-<td align="left">John asks Emil.</td>
-<td align="left">At_John_ask</td>
-</tr>
 </tbody>
 </table>
 </div>
 <div id="fast-motif-extraction" class="section level2">
 <h2>Fast motif extraction</h2>
-<p>The extraction rules in <code>semgram</code> aim for comprehensiveness, so that motifs are correctly identified even in complex sentences like those shown above. However, the majority of extracted motifs are extracted by rather simple rules. <code>extract_motifs</code> offers an option for speeding up the extraction process which can be accessed by setting <code>fast = TRUE</code>. In fast mode, we drop a few of the extraction rules written for very specific syntactic patterns. By doing so, we miss some of the motifs we could have extracted but we do this for the advantage of considerably decreased run time.</p>
-<p>To demonstrate this, we will first download a book using the <code>gutenbergr</code> library, which provides quick access to the works collected by the <a href="https://www.gutenberg.org">Project Gutenberg</a>. Specifically, we access Balzac’s short story “Sarrasine” - you may choose another work, of course. We collapse the book into a long string and pass it through the <code>spacyr</code> annotation pipeline.</p>
+<p>The extraction rules in <code>semgram</code> aim for comprehensiveness, so that motifs are correctly identified even in syntactically complex sentences like those shown above. However, the majority of extracted motifs are extracted by rather simple rules. <code>extract_motifs</code> offers an option for speeding up the extraction process which can be accessed by setting <code>fast = TRUE</code>. In fast mode, we drop a few of the extraction rules written for very specific syntactic patterns. By doing so, we miss some of the motifs we could have extracted but we do this for the advantage of considerably decreased run time.</p>
+<p>To demonstrate this, we will first download a book using the <code>gutenbergr</code> library, which provides quick access to the works collected by <a href="https://www.gutenberg.org">Project Gutenberg</a>. Specifically, we access Balzac’s short story “Sarrasine” - you may choose another work, of course. We collapse the book into a long string and pass it through the <code>spacyr</code> annotation pipeline. Note that sometimes, the gutenberg server is down and you might have to select a different mirror, a list of which can be found <a href="https://www.gutenberg.org/MIRRORS.ALL">here</a>.</p>
 <pre class="r"><code>library(gutenbergr)
-sarrasine &lt;- gutenberg_download(1826)
+sarrasine &lt;- gutenberg_download(1826, mirror = &quot;https://gutenberg.pglaf.org/&quot;)
 sarrasine_text = paste0(sarrasine$text, collapse = &quot; &quot;)
 tokens_df = spacy_parse(sarrasine_text, dependency=T)</code></pre>
-<p>For demo purposes, we simply extract all motifs around pronouns. We do this once in the normal extraction mode and once in fast extraction mode.</p>
+<p>For demo purposes, we simply extract all motifs around any entity. We do this once in the normal extraction mode and once in fast extraction mode.</p>
 <pre class="r"><code>time = Sys.time()
 motifs = extract_motifs(tokens_df, 
-                        entities = c(&quot;I&quot;, &quot;my&quot;, &quot;me&quot;, &quot;you&quot;, &quot;your&quot;, 
-                                     &quot;he&quot;, &quot;him&quot;, &quot;his&quot;, &quot;she&quot;, &quot;her&quot;,
-                                     &quot;we&quot;, &quot;our&quot;,
-                                     &quot;they&quot;, &quot;their&quot;, &quot;them&quot;),
+                        entities = c(&quot;*&quot;),
                         pron_as_ap = T)
 time_gap = Sys.time()-time
 
 time = Sys.time()
 motifs_fast = extract_motifs(tokens_df, 
-                             entities = c(&quot;I&quot;, &quot;my&quot;, &quot;me&quot;, &quot;you&quot;, &quot;your&quot;, 
-                                          &quot;he&quot;, &quot;him&quot;, &quot;his&quot;, &quot;she&quot;, &quot;her&quot;,
-                                          &quot;we&quot;, &quot;our&quot;,
-                                          &quot;they&quot;, &quot;their&quot;, &quot;them&quot;),
+                             entities = c(&quot;*&quot;),
                              pron_as_ap = T,
                              fast = T)
 time_gap_fast = Sys.time()-time</code></pre>
@@ -715,29 +774,33 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 8.856007 secs
+## Time difference of 7.203043 secs
 ## 
 ## Time fast mode:
-## Time difference of 2.514715 secs
+## Time difference of 1.641262 secs
 ## 
-## Time saved: 72 %</code></pre>
+## Time saved: 77 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
-<pre class="r"><code>cat(&quot;Total motifs in normal mode:&quot;,length(unlist(motifs)), &quot;\n&quot;)
-cat(&quot;Total motifs in fast mode:&quot;,length(unlist(motifs_fast)), &quot;\n&quot;)
+<pre class="r"><code>n_slow = sum(unlist(lapply(motifs, function(x) nrow(x))))
+n_fast = sum(unlist(lapply(motifs_fast, function(x) nrow(x))))
+
+
+cat(&quot;Total motifs in normal mode:&quot;, n_slow, &quot;\n&quot;)
+cat(&quot;Total motifs in fast mode:&quot;, n_fast, &quot;\n&quot;)
 cat(&quot;Percentage of motifs extracted in fast mode: &quot;,
-    round(length(unlist(motifs_fast))/length(unlist(motifs)),4)*100,&quot;\n\n&quot;)
+    round(n_fast/n_slow,4)*100,&quot;\n\n&quot;)
 
 print(&quot;Percentage of motifs extracted in fast mode by category:\n&quot;)
-round(lengths(motifs_fast)/lengths(motifs),3)*100</code></pre>
-<pre><code>## Total motifs in normal mode: 1753 
-## Total motifs in fast mode: 1548 
-## Percentage of motifs extracted in fast mode:  88.31 
+round(unlist(lapply(motifs_fast, function(x) nrow(x)))/unlist(lapply(motifs, function(x) nrow(x))),3)*100</code></pre>
+<pre><code>## Total motifs in normal mode: 5279 
+## Total motifs in fast mode: 4346 
+## Percentage of motifs extracted in fast mode:  82.33 
 ## 
 ## [1] &quot;Percentage of motifs extracted in fast mode by category:\n&quot;
-##              acts          patients        treatments            agents 
-##              92.3              83.0              70.4              93.3 
-## characterizations       possessions  agent_treatments   action_Patients 
-##              93.8              98.4              77.8              83.0</code></pre>
+##           actions        treatments characterizations       possessions 
+##              85.7              89.2              98.5              56.8 
+##  agent_treatments   action_Patients 
+##              80.6              79.9</code></pre>
 </div>
 </div>
 

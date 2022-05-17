@@ -2,18 +2,22 @@
 ##### Rule: Being an entity
 ##### Example: "His favorite cousin was entity." (cousin)
 
-be_7 = function(tokens, entities, verb_pos, agent_patient_pos){
+be_7 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "attr",
+                label = "Entity", fill = F,
                 parents(pos = c("VERB", "AUX"), lemma = "be",
                         children(pos = c("NOUN", "PROPN"), relation = "nsubj",
                                  phrase_replacement = NA,
-                                 label = "Motif",
+                                 label = "characterization",
                                  fill = F)
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("being_entity", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }

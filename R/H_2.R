@@ -4,21 +4,22 @@
 ##### Note: we look for both parent and children conjunctions because the dependency trees predicted acan be highly
 #####       irregular on this regard.
 
-H_2 = function(tokens, entities, verb_pos, agent_patient_pos){
+H_2 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
   rule = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
+                label = "Entity", fill = F,
                 parents(token =  "of", relation = "prep",
                         parents(pos = c("NOUN", "PROPN"),
-                                label = "Motif",
+                                label = "Possession",
                                 fill = F,
                                 parents(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                        label = "Motif",
+                                        label = "Possession",
                                         fill = F
                                 ),
                                 children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                         label = "Motif",
+                                         label = "Possession",
                                          fill = F,
                                          children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                                  label = "Motif",
+                                                  label = "Possession",
                                                   fill = F
                                          )
                                 )
@@ -26,8 +27,11 @@ H_2 = function(tokens, entities, verb_pos, agent_patient_pos){
                 )
   )
   
-  tokens = tokens %>%
-    annotate_tqueries("posessive_of", rule, overwrite = T, copy = F)
-  tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-  return(tokens)
+  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
+  if(all(is.na(tokens$query))){
+    casted = data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
+  } else {
+    casted = cast_text(tokens, 'query', text_col = extract)
+  }
+  return(casted)
 }
