@@ -42,8 +42,9 @@ In the example sentence, we find an action motif (a_chase) and well as a composi
 extract_motifs(tokens = tokens_df, entities = c("Emil"))
 
 #> List of 8
-#>  $actions   			doc_id		ann_id		Entity		action
-#>						text1		text1.1.1  	Emil  		chase
+#>  $actions   			
+#>	doc_id	ann_id		Entity	action
+#>	text1	text1.1.1  	Emil  	chase
 #>  $treatments
 #>	character(0)
 #>  $characterizations
@@ -52,6 +53,7 @@ extract_motifs(tokens = tokens_df, entities = c("Emil"))
 #>	character(0)
 #>  $agent_treatments
 #>	character(0)
-#>  $action_Patients	doc_id		ann_id		Entity		action 		Patient
-#>						text1 		text1.1.2   Emil  		chase   	thief
+#>  $action_Patients	
+#>	doc_id	ann_id		Entity	action 	Patient
+#>	text1 	text1.1.2   Emil  	chase   thief
 ```
