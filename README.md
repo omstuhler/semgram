@@ -55,5 +55,5 @@ extract_motifs(tokens = tokens_df, entities = c("Emil"))
 #>	character(0)
 #>  $action_Patients	
 #>	doc_id	ann_id		Entity	action 	Patient
-#>	text1 	text1.1.2   Emil  	chase   thief
+#>	text1 	text1.1.2	Emil  	chase   thief
 ```
