@@ -6,7 +6,7 @@ This repository hosts the ```semgram``` R package.
 
 > Stuhler, Oscar (2022). "Who does What to Whom? Making Text Parsers Work for Sociological Inquiry." *Sociological Methods & Research*. doi: 10.1177/00491241221099551
 
-`semgram` builds on functionalities of [`spacyr`](https://cran.r-project.org/web/packages/spacyr/index.html) for dependency parsing and [`rsyntax`](https://github.com/vanatteveldt/rsyntax) for implementing rules querying dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing the formal rules for to do this from scratch, `rsyntax` is the way to go.
+`semgram` builds on functionalities of [`spacyr`](https://cran.r-project.org/web/packages/spacyr/index.html) for dependency parsing and [`rsyntax`](https://github.com/vanatteveldt/rsyntax) for implementing rules querying dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing the formal rules for to do this from scratch, [`rsyntax`](https://github.com/vanatteveldt/rsyntax) is the way to go.
 
 ## Installation
 
