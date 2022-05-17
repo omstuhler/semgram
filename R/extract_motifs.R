@@ -67,7 +67,6 @@ extract_motifs = function(tokens = NULL,
     names(tokens)[which(names(tokens) == "dep_rel")] = "relation"
   }
 
-
   ###############################################################################################
   ##### Replace
 
@@ -235,328 +234,87 @@ extract_motifs = function(tokens = NULL,
   ###############################################################################################
 
   ###############################################################################################
-  ############################################Acts###############################################
+  ############################################Action#############################################
   ###############################################################################################
 
   if("a" %in% motif_classes){
     if(verbose){cat("Extracting actions\n")}
+    
     ###############################################################################################
-    ##### Rule: nsubj act or conjuncted second verb
-    ##### Example: "ENTITY asked Joe." (asked)
-    ##### Example: "ENTITY called and asked Joe." (called, asked)
-    ##### Note: Note that the current basic annotation scheme cannot distinguish between a dependent of the first
-    ##### conjunct and a shared dependent of the whole coordination (see https://universaldependencies.org/u/dep/conj.html).
-    ##### E.g. in "ENTITY called and Joe answered." "answered" would be picked up as action of ENTITY if we just took conj-dependents.
-    ##### To prevent this, we add a not_children condition to avoid cases where an independent subject is named.
+    ##### Run fast rules
     tryCatch({
-      nsubj_act_conj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                              parents(pos = verb_pos,
-                                      label = "Motif", fill = F,
-                                      children(pos = verb_pos, relation = "conj", req = F,
-                                               not_children(relation = "nsubj", depth = 1),
-                                               label = "Motif", fill = F,
-                                               children(get_aux_verbs_par = "YES",
-                                                        pos = verb_pos, relation = "aux", req = F,
-                                                        label = "Motif", fill = F
-                                               )
-                                      ),
-                                      children(get_aux_verbs_par = "YES",
-                                               pos = verb_pos, relation = "aux", req = F,
-                                               label = "Motif", fill = F
-                                      )
-                              )
-      )
-
-      tokens = tokens %>%
-        annotate_tqueries("nsubj_act_conj", nsubj_act_conj, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+      tokens = semgram:::a_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+      message("There was an error in extracting action motifs (a_1). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$nsubj_act_conj <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: nsubj with conjuncted second actor and possibly second verb
-    ##### Example: "Joe and ENTITY called Steve" (called)
-    ##### Example: "Joe and ENTITY called and asked Steve." (called, asked)
+    ##### Run slow rules
     if(fast){
-      tokens$nsubj_act_noun_conj_verb_conj = NA
+      tokens$nsubj_act_noun_conj_verb_conj = 
+        tokens$by_act = 
+        tokens$by_act_noun_conjunct = 
+        tokens$by_act_2 = 
+        tokens$by_act_2_1 = 
+        tokens$by_act_2_noun_conj = 
+        tokens$by_act_2_noun_conj_1 = 
+        tokens$xcomp_act_conj_verb = 
+        tokens$xcomp_act_conj_noun = NA
+      
     } else {
       tryCatch({
-        nsubj_act_noun_conj_verb_conj = tquery(OR(token = entities, appos_child = "appos_child"),
-                                               relation = "conj",
-                                               parents(pos = c("NOUN", "PROPN", "PRON"),  relation = "nsubj",
-                                                       parents(pos = verb_pos,
-                                                               label = "Motif", fill = F,
-                                                               children(pos = verb_pos, relation = "conj", req = F,
-                                                                        not_children(relation = "nsubj", depth = 1),
-                                                                        label = "Motif", fill = F,
-                                                                        children(get_aux_verbs_par = "YES",
-                                                                                 pos = verb_pos, relation = "aux", req = F,
-                                                                                 label = "Motif", fill = F
-                                                                        ),
-                                                                        children(get_aux_verbs_par = "YES",
-                                                                                 pos = verb_pos, relation = "aux", req = F,
-                                                                                 label = "Motif", fill = F
-                                                                        )
-                                                               )
-                                                       )
-                                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("nsubj_act_noun_conj_verb_conj", nsubj_act_noun_conj_verb_conj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_2(tokens, entities, verb_pos, agent_patient_pos)
       },error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_2). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$nsubj_act_noun_conj_verb_conj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by
-    ##### Example: "Sue is asked by Entity." (asked)
-    if(fast){
-      tokens$by_act = NA
-    } else {
       tryCatch({
-        by_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                        parents(pos = "ADP", lemma = "by", relation = "agent",
-                                parents(pos = "VERB",
-                                        label = "Motif", fill = F)))
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act", by_act, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_3(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_3). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act <<- NA
       })
-    }
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by and noun conjunct
-    ##### Example: "Sue is asked by Steve and ENTITY." (asked)
-    if(fast){
-      tokens$by_act_noun_conjunct = NA
-    } else {
       tryCatch({
-        by_act_noun_conjunct = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                      parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                              parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                      parents(pos = "VERB",
-                                                              label = "Motif", fill = F
-                                                      )
-                                              )
-                                      )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_noun_conjunct", by_act_noun_conjunct, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_4(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_4). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_noun_conjunct <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by conjunction
-    ##### Example: "Sue is called and asked by ENTITY." (called)
-    if(fast){
-      tokens$by_act_2 = NA
-    } else {
       tryCatch({
-        by_act_2 = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                          parents(pos = "ADP", lemma = "by", relation = "agent",
-                                  parents(pos = c("VERB", "AUX"), relation = "conj",
-                                          parents(pos = "VERB",
-                                                  label = "Motif", fill = F)
-                                  )
-                          )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_2", by_act_2, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_5(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_5). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_2 <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by conjunction second verb
-    ##### Example: "Sue is called and asked by ENTITY." (asked)
-    if(fast){
-      tokens$by_act_2_1 = NA
-    } else {
       tryCatch({
-        by_act_2_1 = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                            parents(pos = "ADP", lemma = "by", relation = "agent",
-                                    parents(pos = "VERB", relation = "conj",
-                                            label = "Motif", fill = F
-                                    )
-                            )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_2_1", by_act_2_1, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_6(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_6). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_2_1 <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by verb conjunction and noun conjunction
-    ##### Example: "Sue is called and asked by Greg and ENTITY" (called)
-    if(fast){
-      tokens$by_act_2_noun_conj = NA
-    } else {
       tryCatch({
-        by_act_2_noun_conj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                    parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                            parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                    parents(pos = c("VERB", "AUX"), relation = "conj",
-                                                            parents(pos = "VERB",
-                                                                    label = "Motif", fill = F
-                                                            )
-                                                    )
-                                            )
-                                    )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_2_noun_conj", by_act_2_noun_conj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_7(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_7). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_2_noun_conj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive subject with by verb conjunction and noun conjunction (second verb)
-    ##### Example: "Sue is called and asked by Greg and ENTITY." (asked)
-    if(fast){
-      tokens$by_act_2_noun_conj_1 = NA
-    } else {
       tryCatch({
-        by_act_2_noun_conj_1 = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                      parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                              parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                      parents(pos = c("VERB"), relation = "conj",
-                                                              label = "Motif", fill = F
-                                                      )
-                                              )
-                                      )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_2_noun_conj_1", by_act_2_noun_conj_1, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_8(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_8). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_2_noun_conj_1 <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Verb with xcomp clause and its conjuncts
-    ##### Example: "ENTITY wants to eat and drink." (eat, drink)
-    ##### Note: not_children inserted is in order to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_conj_verb = NA
-    } else {
       tryCatch({
-        xcomp_act_conj_verb = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                     parents(pos = c("VERB", "AUX"),
-                                             children(pos = "VERB", relation = "xcomp",
-                                                      not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                      not_children(relation = "nsubj"),
-                                                      label = "Motif", fill = F,
-                                                      children(pos = "VERB", relation = "conj", req = F,
-                                                               not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                               not_children(relation = "nsubj"),
-                                                               label = "Motif", fill = F,
-                                                               children(pos = "VERB", relation = "conj", req = F,
-                                                                        not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                        not_children(relation = "nsubj"),
-                                                                        label = "Motif", fill = F
-                                                               )
-                                                      )
-                                             )
-
-                                     )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_conj_verb", xcomp_act_conj_verb, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_9(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_9). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_conj_verb <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Verb with xcomp clause and noun conjunct
-    ##### Example: "Jack and ENTITY want to eat." (eat)
-    ##### Note: not_children inserted in order to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_conj_noun = NA
-    } else {
       tryCatch({
-        xcomp_act_conj_noun = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                     parents(pos = c("PROPN", "NOUN", "PRON"), relation = "nsubj",
-                                             parents(pos = c("VERB", "AUX"),
-                                                     children(pos = "VERB", relation = "xcomp",
-                                                              not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                              not_children(relation = "nsubj"),
-                                                              label = "Motif", fill = F,
-                                                              children(pos = "VERB", relation = "conj", req = F,
-                                                                       not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                       not_children(relation = "nsubj"),
-                                                                       label = "Motif", fill = F)
-                                                     )
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_conj_noun", xcomp_act_conj_noun, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::a_10(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting action motifs. Some action motifs might not have been extracted properly.")
+        message("There was an error in extracting action motifs (a_10). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_conj_noun <<- NA
       })
     }
@@ -570,438 +328,96 @@ extract_motifs = function(tokens = NULL,
   if("P" %in% motif_classes){
     if(verbose){cat("Extracting patients\n")}
     ###############################################################################################
-    ##### Rule: Object of nsubj act
-    ##### Example: "ENTITY calls Joe, Sue, and Michael." (Joe, Sue, Michael)
-    ##### Example: "ENTITY give Joseph a present." (Joseph, present)
-    ##### Example: "ENTITY called my friend Peter." (friend, Peter)
-    ##### Note: The last sentence exemplifies how appositions are considered. This presumes that use_appos is set to TRUE.
     tryCatch({
-      nsubj_obj_conj_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                  parents(pos = c("VERB", "AUX"), NOT(lemma = "have"),
-                                          children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Motif",
-                                                   fill = F,
-                                                   children(pos = agent_patient_pos, relation = c("conj", "appos"), depth = 3, req = F,
-                                                            label = "Motif",
-                                                            fill = F
-                                                   )
-                                          )
-                                  )
-      )
-
-      tokens = tokens %>% annotate_tqueries("nsubj_obj_conj_act", nsubj_obj_conj_act, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+      tokens = semgram:::P_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting Patient motifs. Some Patient motifs might not have been extracted properly.")
+      message("There was an error in extracting Patient motifs (P_1). Some Patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$nsubj_obj_conj_act <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
-    ##### Example: "Joe and ENTITY asked Joe, Sue, and Michael." (Joe, Sue, Michael)
-    ##### Example: "Steven and ENTITY give Joseph a present." (Joe, Sue, Michael)
-    ##### Example: "Steven and ENTITY had lunch." (Joe, Sue, Michael)
     if(fast){
-      tokens$nsubj_obj_conj = NA
+      tokens$nsubj_obj_conj = 
+        tokens$nsubj_conj_obj_act =
+        tokens$nsubj_conj_subj_cons_obj =
+        tokens$by_act_obj =
+        tokens$by_act_obj_nc =
+        tokens$by_act_obj_cverb =
+        tokens$by_act_obj_cverb_cobj =
+        tokens$xcomp_act_obj =
+        tokens$xcomp_act_obj_vconj =
+        tokens$xcomp_act_obj_nconj =
+        tokens$xcomp_act_obj_nconj_vconj = NA
+      
     } else {
       tryCatch({
-        nsubj_obj_conj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                parents(pos = agent_patient_pos, relation = "nsubj",
-                                        parents(pos = c("VERB", "AUX"), NOT(lemma = "have"),
-                                                children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Motif",
-                                                         fill = F,
-                                                         children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                  label = "Motif", fill = F, depth = 3
-                                                         )
-                                                )
-                                        )
-                                )
-        )
-
-        tokens = tokens %>% annotate_tqueries("nsubj_obj_conj", nsubj_obj_conj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_2(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting Patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting Patient motifs (P_2). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$nsubj_obj_conj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of conjuncted verb
-    ##### Example: "ENTITY came and kissed Joe, Sue, and Michael." (Joe, Sue, Michael)
-    ##### Example: "ENTITY came and gave Steve a present." (Steve, present)
-    if(fast){
-      tokens$nsubj_conj_obj_act = NA
-    } else {
       tryCatch({
-        nsubj_conj_obj_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                    parents(pos = c("VERB", "AUX"),
-                                            children(pos = c("VERB", "AUX"), relation = "conj",
-                                                     NOT(lemma = "have"),
-                                                     not_children(relation = "nsubj", depth = 1),
-                                                     children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                              label = "Motif",
-                                                              fill = F,
-                                                              children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                       label = "Motif", req = F, depth = 3,
-                                                                       fill = F
-                                                              )
-                                                     )
-                                            )
-                                    )
-        )
-
-
-        tokens = tokens %>%
-          annotate_tqueries("nsubj_conj_obj_act", nsubj_conj_obj_act, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_3(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_3). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$nsubj_conj_obj_act <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
-    ##### Example: "Joe and ENTITY came and kissed Joe, Sue, and Michael." (Joe, Sue, Michael)
-    ##### Example: "Joe and ENTITY came and gave Steve a present." (Steve, present)
-    if(fast){
-      tokens$nsubj_conj_subj_cons_obj = NA
-    } else {
       tryCatch({
-        nsubj_conj_subj_cons_obj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                          parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                  parents(pos = c("VERB", "AUX"),
-                                                          children(pos = c("VERB", "AUX"), relation = "conj",
-                                                                   NOT(lemma = "have"),
-                                                                   not_children(relation = "nsubj", depth = 1),
-                                                                   children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                            label = "Motif",
-                                                                            fill = F,
-                                                                            children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                                     label = "Motif", req = F, depth = 3,
-                                                                                     fill = F
-                                                                            )
-                                                                   )
-                                                          )
-                                                  )
-                                          )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("nsubj_conj_subj_cons_obj", nsubj_conj_subj_cons_obj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_4(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_4). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$nsubj_conj_subj_cons_obj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by
-    ##### Example: "Joe, Sue, and Michael are asked by ENTITY." (Joe, Sue, Michael)
-    ##### Example: "Steve is given a present by ENTITY" (Steve, present)
-    if(fast){
-      tokens$by_act_obj = NA
-    } else {
       tryCatch({
-        by_act_obj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                            parents(pos = "ADP", lemma = "by", relation = "agent",
-                                    parents(pos = c("VERB", "AUX"),
-                                            children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                     label = "Motif", fill = F,
-                                                     children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                              label = "Motif", fill = F, depth = 3
-                                                     )
-                                            )
-                                    )
-                            )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj", by_act_obj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_5(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_5). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_obj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and noun conjunct
-    ##### Example: "Joseph, Sue, and Michael are asked by Jack and ENTITY." (Joe, Sue, Michael)
-    ##### Example: "Mike and Steve were given a present by Jack and ENTITY." (Steve, present)
-    if(fast){
-      tokens$by_act_obj_nc = NA
-    } else {
       tryCatch({
-        by_act_obj_nc = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                               parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                       parents(pos = "ADP", lemma = "by", relation = "agent",
-                                               parents(pos = c("VERB", "AUX"),
-                                                       children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                label = "Motif", fill = F,
-                                                                children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                         label = "Motif", fill = F, depth = 3
-                                                                )
-                                                       )
-                                               )
-                                       )
-                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_nc", by_act_obj_nc, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_6(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_6). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_obj_nc <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb
-    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (Joseph, Sue, Michael)
-    if(fast){
-      tokens$by_act_obj_cverb = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                                  parents(pos = "ADP", lemma = "by", relation = "agent",
-                                          parents(pos = "VERB", relation = "conj",
-                                                  parents(pos = "VERB",
-                                                          children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                   label = "Motif", fill = F,
-                                                                   children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                            label = "Motif", fill = F, depth = 3
-                                                                   )
-                                                          )
-                                                  )
-                                          )
-                                  )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb", by_act_obj_cverb, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_7(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_7). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_obj_cverb <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted subject
-    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (Joseph, Sue, Michael)
-    if(fast){
-      tokens$by_act_obj_cverb_cobj = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb_cobj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                       parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                               parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                       parents(pos = "VERB", relation = "conj",
-                                                               parents(pos = "VERB",
-                                                                       children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                                label = "Motif", fill = F,
-                                                                                children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                                         label = "Motif", fill = F, depth = 3
-                                                                                )
-                                                                       )
-                                                               )
-                                                       )
-                                               )
-                                       )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb_cobj", by_act_obj_cverb_cobj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_8(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_8). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_obj_cverb_cobj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause
-    ##### Example: "ENTITY wants to eat rice, grapes, and steak." (rice, grapes, steak)
-    ##### Example: "ENTITY wants to give Steve a present." (Steve, present)
-    ##### Note: not_children inserted in order to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_obj = NA
-    } else {
       tryCatch({
-        xcomp_act_obj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                               parents(pos = c("VERB", "AUX"),
-                                       children(pos = "VERB", relation = "xcomp",
-                                                NOT(lemma = "have"),
-                                                not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                not_children(relation = "nsubj"),
-                                                children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                         label = "Motif", fill = F,
-                                                         children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                  label = "Motif", fill = F, depth = 3
-                                                         )
-                                                )
-                                       )
-                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj", xcomp_act_obj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_9(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_9). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_obj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause and verb conjunct
-    ##### Example: "ENTITY wants to chat and eat rice, grapes, and steak." (rice, grapes, steak)
-    ##### Example: "ENTITY wants to chat and give Steven a present." (Steven, present)
-    ##### Note: not_children inserted in order to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_obj_vconj = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_vconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                     parents(pos = c("VERB", "AUX"),
-                                             children(pos = "VERB", relation = "xcomp",
-                                                      not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                      not_children(relation = "nsubj"),
-                                                      children(pos = "VERB", relation = "conj",
-                                                               NOT(lemma = "have"),
-                                                               children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                        label = "Motif", fill = F,
-                                                                        children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                 label = "Motif", fill = F, depth = 3
-                                                                        )
-                                                               )
-                                                      )
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_vconj", xcomp_act_obj_vconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_10(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_10). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_obj_vconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and ENTITY as subject conjunct
-    ##### Example: "Jonathan and ENTITY want to eat rice, grapes, and steak." (rice, grapes, steak)
-    ##### Example: "Jonathan and ENTITY want to give Steven a present." (Steven, present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_obj_nconj = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_nconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                     parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                             parents(pos = c("VERB", "AUX"),
-                                                     children(pos = "VERB", relation = "xcomp",
-                                                              not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                              not_children(relation = "nsubj"),
-                                                              NOT(lemma = "have"),
-                                                              children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                       label = "Motif", fill = F,
-                                                                       children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                label = "Motif", fill = F, depth = 3
-                                                                       )
-                                                              )
-                                                     )
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_nconj", xcomp_act_obj_nconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_11(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_11). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_obj_nconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause, conjuncted transitive verb, and ENTITY as subject conjunct
-    ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and steak." (rice, grapes, steak)
-    ##### Example: "Jonathan and ENTITY want to swim and give Steven a present." (Steven, present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      tokens$xcomp_act_obj_nconj_vconj = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_nconj_vconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                           parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                   parents(pos = c("VERB", "AUX"),
-                                                           children(pos = "VERB", relation = "xcomp",
-                                                                    not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                    not_children(relation = "nsubj"),
-                                                                    children(pos = "VERB", relation = "conj",
-                                                                             NOT(lemma = "have"),
-                                                                             children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                                      label = "Motif", fill = F,
-                                                                                      children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                               label = "Motif", fill = F, depth = 3
-                                                                                      )
-                                                                             )
-                                                                    )
-
-                                                           )
-                                                   )
-                                           )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_nconj_vconj", xcomp_act_obj_nconj_vconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::P_12(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting patient motifs. Some patient motifs might not have been extracted properly.")
+        message("There was an error in extracting patient motifs (P_12). Some patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$xcomp_act_obj_nconj_vconj <<- NA
       })
     }
   }
-
 
 
   ###############################################################################################
@@ -1011,608 +427,108 @@ extract_motifs = function(tokens = NULL,
   if("aP" %in% motif_classes){
     if(verbose){cat("Extracting action-patients\n")}
     ###############################################################################################
-    ##### Rule: Object of nsubj act
-    ##### Example: "ENTITY asked Joe, Sue, and Michael." (asked, Joe Sue Michael)
-    ##### Example: "ENTITY give Joseph a present." (give, Joseph present)
     tryCatch({
-      nsubj_obj_conj_act_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                     parents(pos = c("VERB", "AUX"),
-                                             fill = F, label = "act",
-                                             NOT(lemma = "have"),
-                                             children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Patient",
-                                                      fill = F,
-                                                      children(pos = agent_patient_pos, relation = c("conj", "appos"), depth = 3, req = F,
-                                                               label = "Patient",
-                                                               fill = F
-                                                      )
-                                             )
-                                     )
-      )
-
-      tokens = tokens %>% annotate_tqueries("nsubj_obj_conj_act_aP", nsubj_obj_conj_act_aP, overwrite = T, copy = F)
-
-      if(all(is.na(tokens$nsubj_obj_conj_act_aP))){
-        nsubj_obj_conj_act_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      } else {
-        nsubj_obj_conj_act_aP_casted = cast_text(tokens, 'nsubj_obj_conj_act_aP', text_col = extract)
-      }
-
+      nsubj_obj_conj_act_aP_casted = semgram:::aP_1(tokens, entities, verb_pos, agent_patient_pos, extract)
     }, error = function(e){
-      message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+      message("There was an error in extracting action-patient motifs (aP_1). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       nsubj_obj_conj_act_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$nsubj_obj_conj_act_aP <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
-    ##### Example: "Steven and ENTITY asked Joe, Sue, and Michael." (ask, Joe Sue Michael)
-    ##### Example: "Steven and ENTITY give Joseph a present." (give, Joseph present)
-    ##### Example: "Steven and ENTITY had lunch." (had, lunch)
     if(fast){
-      nsubj_obj_conj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$nsubj_obj_conj_aP = NA
+      nsubj_obj_conj_aP_casted = 
+        nsubj_conj_obj_act_aP_casted = 
+        nsubj_conj_subj_cons_obj_aP_casted = 
+        by_act_obj_aP_casted = 
+        by_act_obj_nc_aP_casted = 
+        by_act_obj_cverb_1_aP_casted = 
+        by_act_obj_cverb_2_aP_casted = 
+        by_act_obj_cverb_cobj_1_aP_casted = 
+        by_act_obj_cverb_cobj_2_aP_casted = 
+        xcomp_act_obj_aP_casted = 
+        xcomp_act_obj_vconj_aP_casted = 
+        xcomp_act_obj_nconj_aP_casted = 
+        xcomp_act_obj_nconj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
+      
     } else {
       tryCatch({
-        nsubj_obj_conj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                   parents(pos = agent_patient_pos, relation = "nsubj",
-                                           parents(pos = c("VERB", "AUX"), label = "act", fill = F,
-                                                   NOT(lemma = "have"),
-                                                   children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Patient",
-                                                            fill = F,
-                                                            children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                     depth = 3, label = "Patient",
-                                                                     fill = F
-                                                            )
-                                                   )
-                                           )
-                                   )
-        )
-
-        tokens = tokens %>% annotate_tqueries("nsubj_obj_conj_aP", nsubj_obj_conj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$nsubj_obj_conj_aP))){
-          nsubj_obj_conj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          nsubj_obj_conj_aP_casted = cast_text(tokens, 'nsubj_obj_conj_aP', text_col = extract)
-        }
+        nsubj_obj_conj_aP_casted = semgram:::aP_2(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_2). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_obj_conj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$nsubj_obj_conj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of conjuncted verb
-    ##### Example: "ENTITY came and kissed Joe, Sue, and Michael." (kissed, Joe Sue Michael)
-    ##### Example: "ENTITY came and gave Steve a present." (gave, Steve present)
-    if(fast){
-      nsubj_conj_obj_act_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$nsubj_conj_obj_act_aP = NA
-    } else {
       tryCatch({
-        nsubj_conj_obj_act_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                       parents(pos = c("VERB", "AUX"),
-                                               children(pos = c("VERB", "AUX"), relation = "conj",
-                                                        label = "act", fill = F,
-                                                        NOT(lemma = "have"),
-                                                        not_children(relation = "nsubj", depth = 1),
-                                                        children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                 label = "Patient",
-                                                                 fill = F,
-                                                                 children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                          label = "Patient", req = F, depth = 3,
-                                                                          fill = F
-                                                                 )
-                                                        )
-                                               )
-                                       )
-        )
-
-
-        tokens = tokens %>%
-          annotate_tqueries("nsubj_conj_obj_act_aP", nsubj_conj_obj_act_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$nsubj_conj_obj_act_aP))){
-          nsubj_conj_obj_act_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          nsubj_conj_obj_act_aP_casted = cast_text(tokens, 'nsubj_conj_obj_act_aP', text_col= extract)
-        }
+        nsubj_conj_obj_act_aP_casted = semgram:::aP_3(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_3). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_conj_obj_act_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$nsubj_conj_obj_act_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
-    ##### Example: "Joe and ENTITY came and kissed Joe, Sue, and Michael." (kissed, Joe Sue Michael)
-    ##### Example: "Joe and ENTITY came and gave Steve a present." (gave, Steve present)
-    if(fast){
-      nsubj_conj_subj_cons_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$nsubj_conj_subj_cons_obj_aP = NA
-    } else {
       tryCatch({
-        nsubj_conj_subj_cons_obj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                             parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                     parents(pos = c("VERB", "AUX"),
-                                                             children(pos = c("VERB", "AUX"), relation = "conj",
-                                                                      fill = F, label = "act",
-                                                                      NOT(lemma = "have"),
-                                                                      not_children(relation = "nsubj", depth = 1),
-                                                                      children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                               label = "Patient",
-                                                                               fill = F,
-                                                                               children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                                        label = "Patient", req = F, depth = 3,
-                                                                                        fill = F
-                                                                               )
-                                                                      )
-                                                             )
-                                                     )
-                                             )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("nsubj_conj_subj_cons_obj_aP", nsubj_conj_subj_cons_obj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$nsubj_conj_subj_cons_obj_aP))){
-          nsubj_conj_subj_cons_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          nsubj_conj_subj_cons_obj_aP_casted = cast_text(tokens, 'nsubj_conj_subj_cons_obj_aP', text_col= extract)
-        }
+        nsubj_conj_subj_cons_obj_aP_casted = semgram:::aP_4(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_4). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_conj_subj_cons_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$nsubj_conj_subj_cons_obj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by
-    ##### Example: "Joe, Susan, and Michael are asked by ENTITY." (asked, Joe Sue Michael)
-    ##### Example: "Steve is given a present by ENTITY." (given, Steve present)
-    if(fast){
-      by_act_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                               parents(pos = "ADP", lemma = "by", relation = "agent",
-                                       parents(pos = c("VERB", "AUX"),
-                                               label = "act", fill = F,
-                                               NOT(lemma = "have"),
-                                               children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                        label = "Patient", fill = F,
-                                                        children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                 label = "Patient", fill = F, depth = 3
-                                                        )
-                                               )
-                                       )
-                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_aP", by_act_obj_aP, overwrite = T, copy = F)
-        if(all(is.na(tokens$by_act_obj_aP))){
-          by_act_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_aP_casted = cast_text(tokens, 'by_act_obj_aP', text_col = extract)
-        }
+        by_act_obj_aP_casted = semgram:::aP_5(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_5). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$by_act_obj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and noun conjunct
-    ##### Example: "Joseph, Sue and Michael are asked by Jack and ENTITY." (asked, Joe Sue Michael)
-    ##### Example: "Mike and Steve were given a present by Jack and ENTITY." (given, Steve present)
-    if(fast){
-      by_act_obj_nc_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_nc_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_nc_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                  parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                          parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                  parents(pos = c("VERB", "AUX"),
-                                                          label = "act", fill = F,
-                                                          NOT(lemma = "have"),
-                                                          children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                   label = "Patient", fill = F,
-                                                                   children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                            label = "Patient", fill = F, depth = 3
-                                                                   )
-                                                          )
-                                                  )
-                                          )
-                                  )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_nc_aP", by_act_obj_nc_aP, overwrite = T, copy = F)
-
-
-        if(all(is.na(tokens$by_act_obj_nc_aP))){
-          by_act_obj_nc_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_nc_aP_casted = cast_text(tokens, 'by_act_obj_nc_aP', text_col = extract)
-        }
+        by_act_obj_nc_aP_casted = semgram:::aP_6(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_6). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_nc_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$by_act_obj_nc_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb (first verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (asked, Joseph Sue Michael)
-    if(fast){
-      by_act_obj_cverb_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_cverb_1_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb_1_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                                       parents(pos = "ADP", lemma = "by", relation = "agent",
-                                               parents(pos = "VERB", relation = "conj",
-                                                       label = "act", fill = F,
-                                                       NOT(lemma = "have"),
-                                                       parents(pos = "VERB",
-                                                               children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                        label = "Patient", fill = F,
-                                                                        children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                                 label = "Patient", fill = F, depth = 3
-                                                                        )
-                                                               )
-                                                       )
-                                               )
-                                       )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb_1_aP", by_act_obj_cverb_1_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$by_act_obj_cverb_1_aP))){
-          by_act_obj_cverb_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_cverb_1_aP_casted = cast_text(tokens, 'by_act_obj_cverb_1_aP', text_col= extract)
-        }
+        by_act_obj_cverb_1_aP_casted = semgram:::aP_7(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_7). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_1_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$by_act_obj_cverb_1_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb (second verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by ENTITY." (called, Joseph Sue Michael)
-    if(fast){
-      by_act_obj_cverb_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_cverb_2_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb_2_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                                       parents(pos = "ADP", lemma = "by", relation = "agent",
-                                               parents(pos = "VERB", relation = "conj",
-                                                       parents(pos = "VERB",
-                                                               label = "act", fill = F,
-                                                               NOT(lemma = "have"),
-                                                               children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                        label = "Patient", fill = F,
-                                                                        children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                                 label = "Patient", fill = F, depth = 3
-                                                                        )
-                                                               )
-                                                       )
-                                               )
-                                       )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb_2_aP", by_act_obj_cverb_2_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$by_act_obj_cverb_2_aP))){
-          by_act_obj_cverb_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_cverb_2_aP_casted = cast_text(tokens, 'by_act_obj_cverb_2_aP', text_col= extract)
-        }
+        by_act_obj_cverb_2_aP_casted = semgram:::aP_8(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_8). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_2_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
         tokens$by_act_obj_cverb_2_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun (first verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (asked, Joseph Sue Michael)
-    if(fast){
-      by_act_obj_cverb_cobj_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_cverb_cobj_1_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb_cobj_1_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                            parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                                    parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                            parents(pos = "VERB", relation = "conj",
-                                                                    label = "act", fill = F,
-                                                                    NOT(lemma = "have"),
-                                                                    parents(pos = "VERB",
-                                                                            children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                                     label = "Patient", fill = F,
-                                                                                     children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                                              label = "Patient", fill = F, depth = 3
-                                                                                     )
-                                                                            )
-                                                                    )
-                                                            )
-                                                    )
-                                            )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb_cobj_1_aP", by_act_obj_cverb_cobj_1_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$by_act_obj_cverb_cobj_1_aP))){
-          by_act_obj_cverb_cobj_1_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_cverb_cobj_1_aP_casted = cast_text(tokens, 'by_act_obj_cverb_cobj_1_aP', text_col = extract)
-        }
+        by_act_obj_cverb_cobj_1_aP_casted = semgram:::aP_9(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_9). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_cobj_1_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$by_act_obj_cverb_cobj_1_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun (second verb)
-    ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (called, Joseph Sue Michael)
-    if(fast){
-      by_act_obj_cverb_cobj_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$by_act_obj_cverb_cobj_2_aP = NA
-    } else {
       tryCatch({
-        by_act_obj_cverb_cobj_2_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                            parents(pos = c("NOUN", "PROPN", "PRON"), relation = "pobj",
-                                                    parents(pos = "ADP", lemma = "by", relation = "agent",
-                                                            parents(pos = "VERB", relation = "conj",
-                                                                    parents(pos = "VERB",
-                                                                            label = "act", fill = F,
-                                                                            NOT(lemma = "have"),
-                                                                            children(relation = c("nsubjpass", "dobj"), pos = agent_patient_pos,
-                                                                                     label = "Patient", fill = F,
-                                                                                     children(relation = c("conj", "appos"), pos = agent_patient_pos, req = F,
-                                                                                              label = "Patient", fill = F, depth = 3
-                                                                                     )
-                                                                            )
-                                                                    )
-                                                            )
-                                                    )
-                                            )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_obj_cverb_cobj_2_aP", by_act_obj_cverb_cobj_2_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$by_act_obj_cverb_cobj_2_aP))){
-          by_act_obj_cverb_cobj_2_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          by_act_obj_cverb_cobj_2_aP_casted = cast_text(tokens, 'by_act_obj_cverb_cobj_2_aP', text_col = extract)
-        }
+        by_act_obj_cverb_cobj_2_aP_casted = semgram:::aP_10(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_10). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_cobj_2_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$by_act_obj_cverb_cobj_2_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause
-    ##### Example: "ENTITY wants to eat rice, grapes, and, steak." (eat, rice grapes steak)
-    ##### Example: "ENTITY wants to give Steve a present." (give, Steve present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      xcomp_act_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$xcomp_act_obj_aP = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                  parents(pos = c("VERB", "AUX"),
-                                          children(pos = "VERB", relation = "xcomp",
-                                                   label = "act", fill = F,
-                                                   NOT(lemma = "have"),
-                                                   not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                   not_children(relation = "nsubj"),
-                                                   children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                            label = "Patient", fill = F,
-                                                            children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                     label = "Patient", fill = F, depth = 3
-                                                            )
-                                                   )
-                                          )
-                                  )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_aP", xcomp_act_obj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$xcomp_act_obj_aP))){
-          xcomp_act_obj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          xcomp_act_obj_aP_casted = cast_text(tokens, 'xcomp_act_obj_aP', text_col = extract)
-        }
+        xcomp_act_obj_aP_casted = semgram:::aP_11(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_11). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$xcomp_act_obj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause and verb conjunct
-    ##### Example: "ENTITY wants to chat and eat rice, grapes, and steak." (eat, rice grapes steak)
-    ##### Example: "ENTITY wants to chat and give Steven a present." (give, Steven present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      xcomp_act_obj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$xcomp_act_obj_vconj_aP = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_vconj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                        parents(pos = c("VERB", "AUX"),
-                                                children(pos = "VERB", relation = "xcomp",
-                                                         not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                         not_children(relation = "nsubj"),
-                                                         children(pos = "VERB", relation = "conj",
-                                                                  label = "act", fill = F,
-                                                                  NOT(lemma = "have"),
-                                                                  children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                           label = "Patient", fill = F,
-                                                                           children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                    label = "Patient", fill = F, depth = 3
-                                                                           )
-                                                                  )
-                                                         )
-                                                )
-                                        )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_vconj_aP", xcomp_act_obj_vconj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$xcomp_act_obj_vconj_aP))){
-          xcomp_act_obj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          xcomp_act_obj_vconj_aP_casted = cast_text(tokens, 'xcomp_act_obj_vconj_aP', text_col = extract)
-        }
+        xcomp_act_obj_vconj_aP_casted = semgram:::aP_12(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_12). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_vconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$xcomp_act_obj_vconj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause and ENTITY as subject conjunct
-    ##### Example: "Jonathan and ENTITY want to eat rice, grapes, and steak." (eat, rice grapes steak)
-    ##### Example: "Jonathan and ENTITY want to give Steven a present." (give, Steven present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      xcomp_act_obj_nconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$xcomp_act_obj_nconj_aP = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_nconj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                        parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                parents(pos = c("VERB", "AUX"),
-                                                        children(pos = "VERB", relation = "xcomp",
-                                                                 label = "act", fill = F,
-                                                                 NOT(lemma = "have"),
-                                                                 not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                 not_children(relation = "nsubj"),
-                                                                 children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                          label = "Patient", fill = F,
-                                                                          children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                   label = "Patient", fill = F, depth = 3
-                                                                          )
-                                                                 )
-                                                        )
-                                                )
-                                        )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_nconj_aP", xcomp_act_obj_nconj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$xcomp_act_obj_nconj_aP))){
-          xcomp_act_obj_nconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          xcomp_act_obj_nconj_aP_casted = cast_text(tokens, 'xcomp_act_obj_nconj_aP', text_col = extract)
-        }
+        xcomp_act_obj_nconj_aP_casted = semgram:::aP_13(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_13). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_nconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$xcomp_act_obj_nconj_aP <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of verb with xcomp clause, conjuncted transitive verb, and ENTITY as subject conjunct
-    ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and, steak." (eat, rice grapes steak)
-    ##### Example: "Jonathan and ENTITY want to swim and give Steven a present." (give, Steven present)
-    ##### Note: not_children inserted is to avoid passiveness.
-    if(fast){
-      xcomp_act_obj_nconj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-      tokens$xcomp_act_obj_nconj_vconj_aP = NA
-    } else {
       tryCatch({
-        xcomp_act_obj_nconj_vconj_aP = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                              parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                      parents(pos = c("VERB", "AUX"),
-                                                              children(pos = "VERB", relation = "xcomp",
-                                                                       not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                       not_children(relation = "nsubj"),
-                                                                       NOT(lemma = "have"),
-                                                                       children(pos = "VERB", relation = "conj",
-                                                                                label = "act", fill = F,
-                                                                                children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                                         label = "Patient", fill = F,
-                                                                                         children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                                  label = "Patient", fill = F, depth = 3
-                                                                                         )
-                                                                                )
-                                                                       )
-
-                                                              )
-                                                      )
-                                              )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("xcomp_act_obj_nconj_vconj_aP", xcomp_act_obj_nconj_vconj_aP, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$xcomp_act_obj_nconj_vconj_aP))){
-          xcomp_act_obj_nconj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        } else {
-          xcomp_act_obj_nconj_vconj_aP_casted = cast_text(tokens, 'xcomp_act_obj_nconj_vconj_aP', text_col = extract)
-        }
+        xcomp_act_obj_nconj_vconj_aP_casted = semgram:::aP_14(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting action-patient motifs. Some action-patient motifs might not have been extracted properly.")
+        message("There was an error in extracting action-patient motifs (aP_14). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_nconj_vconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), act = character(), Patient = character())
-        tokens$xcomp_act_obj_nconj_vconj_aP <<- NA
       })
     }
   }
@@ -1623,106 +539,39 @@ extract_motifs = function(tokens = NULL,
   ###############################################################################################
   if("t" %in% motif_classes){
     if(verbose){cat("Extracting treatments\n")}
-    ###############################################################################################
-    ##### Rule: Object of nsubj act
-    ##### Example: "Joe calls ENTITY." (calls)
-    ##### Example: "Joe gives Michael a ENTITY." (gives)
     tryCatch({
-      dobj_treat = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
-                          parents(pos = "VERB",
-                                  label = "Motif",
-                                  fill = F)
-      )
-
-      tokens = tokens %>% annotate_tqueries("dobj_treat", dobj_treat, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+      tokens = semgram:::t_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting treatment motifs. Some treatment motifs might not have been extracted properly.")
+      message("There was an error in extracting treatment motifs (t_1). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$dobj_treat <<- NA
     })
 
-
-
-    ###############################################################################################
-    ##### Rule: noun conjunct of object of nsubj act
-    ##### Example: "Joe calls Steve and ENTITY." (calls)
-    ##### Example: "Joe gives Steve an apple and an ENTITY." (gives)
-
-    ##### Note: We can't collect more verbs because based on the grammar, it will be
-    ##### unclear whether these will be transitive.
     if(fast){
-      tokens$dobj_conj_treat = NA
+      tokens$dobj_conj_treat = 
+        tokens$obj_of_by_act = 
+        tokens$obj_of_by_act_nconj = NA
+      
     } else {
       tryCatch({
-        dobj_conj_treat = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                 parents(relation = c("dobj", "dative"), pos = c("NOUN", "PROPN", "PRON"),
-                                         parents(pos = "VERB",
-                                                 label = "Motif",
-                                                 fill = F
-                                         )
-                                 )
-        )
-
-        tokens = tokens %>% annotate_tqueries("dobj_conj_treat", dobj_conj_treat, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::t_2(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting treatment motifs. Some treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting treatment motifs (t_2). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$dobj_conj_treat <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive construction treatment
-    ##### Example: "ENTITY is asked." (asked)
-    if(fast){
-      tokens$obj_of_by_act = NA
-    } else {
       tryCatch({
-        obj_of_by_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("nsubjpass"),
-                               parents(pos = "VERB",
-                                       label = "Motif", fill = F
-                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("obj_of_by_act", obj_of_by_act, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::t_3(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting treatment motifs. Some treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting treatment motifs (t_3). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$obj_of_by_act <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Passive construction treatment and noun conjunct (entity)
-    ##### Example: "Sue and ENTITY are asked." (asked)
-    ##### Example: "Steve were given apples and ENTITY." (given)
-    if(fast){
-      tokens$obj_of_by_act_nconj = NA
-    } else {
       tryCatch({
-        obj_of_by_act_nconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                     parents(pos = c("NOUN", "PROPN", "PRON"), relation = c("nsubjpass"),
-                                             parents(pos = "VERB",
-                                                     label = "Motif", fill = F
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("obj_of_by_act_nconj", obj_of_by_act_nconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::t_4(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting treatment motifs. Some treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting treatment motifs (t_4). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$obj_of_by_act_nconj <<- NA
       })
     }
   }
-
 
   ###############################################################################################
   ###########################################Agent###############################################
@@ -1731,150 +580,42 @@ extract_motifs = function(tokens = NULL,
   if("A" %in% motif_classes){
     if(verbose){cat("Extracting agents\n")}
     ###############################################################################################
-    ##### Rule: Actor of nsubj act with object
-    ##### Example: "Joseph, Sarah, and Steve call ENTITY." (Joe, Sarah, Steve)
-    ##### Example: "Joseph, Sarah, and Steve give Michael a ENTITY." (Joe, Sarah, Steve)
     tryCatch({
-      dobj_treat_actor = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
-                                parents(pos = "VERB",
-                                        children(pos = agent_patient_pos, relation = "nsubj",
-                                                 label = "Motif", fill = F,
-                                                 children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                          label = "Motif", fill = F, depth = 3
-                                                 )
-                                        )
-                                )
-      )
-
-      tokens = tokens %>% annotate_tqueries("dobj_treat_actor", dobj_treat_actor, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+      tokens = semgram:::agent_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting agent motifs. Some agent motifs might not have been extracted properly.")
+      message("There was an error in extracting agent motifs  (agent_1). Some agent motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$dobj_treat_actor <<- NA
     })
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of conjuncted nsubj act with object
-    ##### Example: "Joseph, Sarah, and Steve came and asked ENTITY." (Joe, Sarah, Steve)
-    ##### Example: "They ran and attacked ENTITY" (They)
     tryCatch({
-      dobj_treat_conj_actor = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
-                                     parents(pos = "VERB", relation = c("conj","xcomp"),
-                                             not_children(pos = agent_patient_pos, relation = "nsubj"),
-                                             parents(pos = c("VERB", "AUX"),
-                                                     children(pos = agent_patient_pos, relation = "nsubj",
-                                                              label = "Motif", fill = F,
-                                                              children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                       label = "Motif", fill = F, depth = 3
-                                                              )
-                                                     )
-                                             )
-                                     )
-      )
-      tokens = tokens %>% annotate_tqueries("dobj_treat_conj_actor", dobj_treat_conj_actor, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+      tokens = semgram:::agent_2(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting agent motifs. Some agent motifs might not have been extracted properly.")
+      message("There was an error in extracting agent motifs (agent_2). Some agent motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$dobj_treat_conj_actor <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: Actor of nsubj act with object and a noun conjunct (entity)
-    ##### Example: "Joseph, Sarah, and Steve call Michael and ENTITY." (Joseph, Sarah, Steve)
-    ##### Example: "Joseph, Sarah, and Steve give Michael an apple and an ENTITY." (Joseph, Sarah, and Steve)
-    ##### Note: We can't collect more verbs because based on the grammar, it will be
-    ##### unclear whether these will be transitive.
     if(fast){
       tokens$dobj_nconj_treat = NA
+      tokens$by_act_agent = NA
+      tokens$obj_of_by_act_nconj_ac = NA
+      
     } else {
       tryCatch({
-        dobj_nconj_treat = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                  parents(relation = c("dobj", "dative"), pos = c("NOUN", "PROPN", "PRON"),
-                                          parents(pos = "VERB",
-                                                  children(pos = agent_patient_pos, relation = "nsubj",
-                                                           label = "Motif", fill = F,
-                                                           children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                    label = "Motif", fill = F, depth = 3
-                                                           )
-                                                  )
-                                          )
-                                  )
-        )
-
-        tokens = tokens %>% annotate_tqueries("dobj_nconj_treat", dobj_nconj_treat, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::agent_3(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting agent motifs. Some agent motifs might not have been extracted properly.")
+        message("There was an error in extracting agent motifs (agent_3). Some agent motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$dobj_nconj_treat <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of by act with object
-    ##### Example: "ENTITY is asked by Peter, Joseph, and Sue." (Peter Joseph Sue)
-    ##### Example: "Steven was given ENTITY by Peter, Joseph, and Sue" (Peter Joseph Sue)
-    if(fast){
-      tokens$by_act_agent = NA
-    } else {
       tryCatch({
-        by_act_agent = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("nsubjpass", "dobj"),
-                              parents(pos = "VERB",
-                                      children(pos = "ADP", lemma = "by", relation = "agent",
-                                               children(pos = agent_patient_pos, relation = "pobj",
-                                                        label = "Motif", fill = F,
-                                                        children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                 label = "Motif", fill = F, depth = 3
-                                                        )
-                                               )
-                                      )
-                              )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_agent", by_act_agent, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::agent_4(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting agent motifs. Some agent motifs might not have been extracted properly.")
+        message("There was an error in extracting agent motifs (agent_4). Some agent motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$by_act_agent <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of by act with object and noun conjunct (entity)
-    ##### Example: "Sue and ENTITY are asked by Peter, Joseph, and Sue." (Peter, Joseph, Sue)
-    ##### Example: "Steve were given apples and ENTITY by Peter, Joseph, and Sue." (Peter, Joseph, Sue)
-    if(fast){
-      tokens$obj_of_by_act_nconj_ac = NA
-    } else {
       tryCatch({
-        obj_of_by_act_nconj_ac = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                        parents(pos = c("NOUN", "PROPN", "PRON"), relation = c("nsubjpass"),
-                                                parents(pos = "VERB",
-                                                        children(pos = "ADP", lemma = "by", relation = "agent",
-                                                                 children(pos = agent_patient_pos, relation = "pobj",
-                                                                          label = "Motif", fill = F,
-                                                                          children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                   label = "Motif", fill = F, depth = 3
-                                                                          )
-                                                                 )
-                                                        )
-                                                )
-                                        )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("obj_of_by_act_nconj_ac", obj_of_by_act_nconj_ac, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::agent_5(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting agent motifs. Some agent motifs might not have been extracted properly.")
+        message("There was an error in extracting agent motifs (agent_5). Some agent motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$obj_of_by_act_nconj_ac <<- NA
       })
     }
@@ -1886,198 +627,47 @@ extract_motifs = function(tokens = NULL,
   if("At" %in% motif_classes){
     if(verbose){cat("Extracting agent-treatments\n")}
     ###############################################################################################
-    ##### Rule: Actor of nsubj act with object
-    ##### Example: "Joseph, Sarah, and Steve call ENTITY." (Joe Sarah Steve, call)
-    ##### Example: "Joseph, Sarah, and Steve give Michael a ENTITY." (Joe Sarah Steve, give)
     tryCatch({
-      dobj_treat_actor_At = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
-                                   parents(pos = "VERB",
-                                           label = "treatment", fill = F,
-                                           children(pos = agent_patient_pos, relation = "nsubj",
-                                                    label = "Agent", fill = F,
-                                                    children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                             label = "Agent", fill = F, depth = 3
-                                                    )
-                                           )
-                                   )
-      )
-
-      tokens = tokens %>% annotate_tqueries("dobj_treat_actor_At", dobj_treat_actor_At, overwrite = T, copy = F)
-
-      if(all(is.na(tokens$dobj_treat_actor_At))){
-        dobj_treat_actor_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      } else {
-        dobj_treat_actor_At_casted = cast_text(tokens, 'dobj_treat_actor_At', text_col = extract)
-      }
+      dobj_treat_actor_At_casted = semgram:::At_1(tokens, entities, verb_pos, agent_patient_pos, extract)
     }, error = function(e){
-      message("There was an error in extracting agent-treatment motifs. Some agent-treatment motifs might not have been extracted properly.")
+      message("There was an error in extracting agent-treatment motifs (At_1). Some agent-treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       dobj_treat_actor_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      tokens$dobj_treat_actor_At <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: Actor of conjuncted nsubj act with object
-    ##### Example: "Joseph, Sarah, and Steve came and asked ENTITY." (Joe Sarah Steve, yell)
     if(fast){
-      dobj_treat_conj_actor_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      tokens$dobj_treat_conj_actor_At = NA
+      dobj_treat_conj_actor_At_casted =
+        dobj_nconj_treat_At_casted =
+        by_act_agent_At_casted = 
+        obj_of_by_act_nconj_ac_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
     } else {
       tryCatch({
-        dobj_treat_conj_actor_At = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("dobj", "dative"),
-                                          parents(pos = "VERB", relation = c("conj","xcomp"),
-                                                  label = "treatment", fill = F,
-                                                  not_children(pos = agent_patient_pos, relation = "nsubj"),
-                                                  parents(pos = c("VERB", "AUX"),
-                                                          children(pos = agent_patient_pos, relation = "nsubj",
-                                                                   label = "Agent", fill = F,
-                                                                   children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                            label = "Agent", fill = F, depth = 3
-                                                                   )
-                                                          )
-                                                  )
-                                          )
-        )
-
-        tokens = tokens %>% annotate_tqueries("dobj_treat_conj_actor_At", dobj_treat_conj_actor_At, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$dobj_treat_conj_actor_At))){
-          dobj_treat_conj_actor_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        } else {
-          dobj_treat_conj_actor_At_casted = cast_text(tokens, 'dobj_treat_conj_actor_At', text_col = extract)
-        }
+        dobj_treat_conj_actor_At_casted = semgram:::At_2(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting agent-treatment motifs. Some agent-treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting agent-treatment motifs (At_2). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         dobj_treat_conj_actor_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        tokens$dobj_treat_conj_actor_At <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of nsubj act with object and a noun conjunct (entity)
-    ##### Example: "Joseph, Sarah, and Steve call Michael and ENTITY." (Joseph Sarah Steve, call)
-    ##### Example: "Joseph, Sarah, and Steve give Michael an apple and an ENTITY." (Joseph Sarah Steve, give)
-    ##### Note: We can't collect more verbs because based on the grammar, it will be
-    ##### unclear whether these will be transitive.
-    if(fast){
-      dobj_nconj_treat_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      tokens$dobj_nconj_treat_At = NA
-    } else {
       tryCatch({
-        dobj_nconj_treat_At = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                     parents(relation = c("dobj", "dative"), pos = c("NOUN", "PROPN", "PRON"),
-                                             parents(pos = "VERB",
-                                                     label = "treatment", fill = F,
-                                                     children(pos = agent_patient_pos, relation = "nsubj",
-                                                              label = "Agent", fill = F,
-                                                              children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                       label = "Agent", fill = F, depth = 3
-                                                              )
-                                                     )
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>% annotate_tqueries("dobj_nconj_treat_At", dobj_nconj_treat_At, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$dobj_nconj_treat_At))){
-          dobj_nconj_treat_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        } else {
-          dobj_nconj_treat_At_casted = cast_text(tokens, 'dobj_nconj_treat_At', text_col = extract)
-        }
+        dobj_nconj_treat_At_casted = semgram:::At_3(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting agent-treatment motifs. Some agent-treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting agent-treatment motifs (At_3). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         dobj_nconj_treat_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        tokens$dobj_nconj_treat_At <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of by act with object
-    ##### Example: "ENTITY is asked by Peter, Joseph, and Sue." (Peter Joseph Sue, ask)
-    ##### Example: "Steven was given ENTITY by Peter, Joseph, and Sue." (Peter Joseph Sue, give)
-    if(fast){
-      by_act_agent_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      tokens$by_act_agent_At = NA
-    } else {
       tryCatch({
-        by_act_agent_At = tquery(OR(token = entities, appos_child = "appos_child"), relation = c("nsubjpass", "dobj"),
-                                 parents(pos = "VERB",
-                                         label = "treatment", fill = F,
-                                         children(pos = "ADP", lemma = "by", relation = "agent",
-                                                  children(pos = agent_patient_pos, relation = "pobj",
-                                                           label = "Agent", fill = F,
-                                                           children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                    label = "Agent", fill = F, depth = 3
-                                                           )
-                                                  )
-                                         )
-                                 )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("by_act_agent_At", by_act_agent_At, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$by_act_agent_At))){
-          by_act_agent_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        } else {
-          by_act_agent_At_casted = cast_text(tokens, 'by_act_agent_At', text_col = extract)
-        }
+        by_act_agent_At_casted = semgram:::At_4(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting agent-treatment motifs. Some agent-treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting agent-treatment motifs (At_4). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_agent_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
         tokens$by_act_agent_At <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Actor of by act with object and noun conjunct (entity)
-    ##### Example: "Sue and ENTITY are asked by Peter, Joseph, and Sue." (Peter, ask)
-    ##### Example: "Steve were given apples and ENTITY by Peter, Joseph, and Sue." (Peter, give)
-    if(fast){
-      obj_of_by_act_nconj_ac_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-      tokens$obj_of_by_act_nconj_ac_At = NA
-    } else {
       tryCatch({
-        obj_of_by_act_nconj_ac_At = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                           parents(pos = c("NOUN", "PROPN", "PRON"), relation = c("nsubjpass", "dobj"),
-                                                   parents(pos = "VERB",
-                                                           label = "treatment", fill = F,
-                                                           children(pos = "ADP", lemma = "by", relation = "agent",
-                                                                    children(pos = agent_patient_pos, relation = "pobj",
-                                                                             label = "Agent", fill = F,
-                                                                             children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                      label = "Agent", fill = F, depth = 3
-                                                                             )
-                                                                    )
-                                                           )
-                                                   )
-                                           )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("obj_of_by_act_nconj_ac_At", obj_of_by_act_nconj_ac_At, overwrite = T, copy = F)
-
-        if(all(is.na(tokens$obj_of_by_act_nconj_ac_At))){
-          obj_of_by_act_nconj_ac_At_casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
-        } else {
-          obj_of_by_act_nconj_ac_At_casted = cast_text(tokens, 'obj_of_by_act_nconj_ac_At', text_col = extract)
-        }
+        obj_of_by_act_nconj_ac_At_casted = semgram:::At_5(tokens, entities, verb_pos, agent_patient_pos, extract)
       }, error = function(e){
-        message("There was an error in extracting agent-treatment motifs. Some agent-treatment motifs might not have been extracted properly.")
+        message("There was an error in extracting agent-treatment motifs (At_5). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         obj_of_by_act_nconj_ac_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Agent = character())
         tokens$obj_of_by_act_nconj_ac_At <<- NA
       })
     }
-
-
   }
 
   ###############################################################################################
@@ -2087,217 +677,71 @@ extract_motifs = function(tokens = NULL,
   if("be" %in% motif_classes){
     if(verbose){cat("Extracting characterizations\n")}
     ###############################################################################################
-    ##### Rule: Being adjective
-    ##### Example: "ENTITY is nice but dumb." (nice, dumb)
-    ##### Example: "ENTITY is a winner and nice." (winner, nice)
-    ##### Example: "ENTITY looks nice." (nice)
     tryCatch({
-      being_adj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                         parents(pos = c("AUX", "VERB"),
-                                 children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("acomp", "attr"), phrase_replacement = NA,
-                                          label = "Motif",
-                                          fill = F,
-                                          children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("conj", "appos", "amod"), req = F, phrase_replacement = NA,
-                                                   label = "Motif",
-                                                   fill = F, depth = 3
-                                          )
-                                 )
-                         )
-      )
-
-      tokens = tokens %>% annotate_tqueries("being_adj", being_adj, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+      tokens = semgram:::be_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+      message("There was an error in extracting characterization motifs (be_1). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$being_adj <<- NA
     })
-
-
-
+    tryCatch({
+      tokens = semgram:::be_6(tokens, entities, verb_pos, agent_patient_pos)
+    }, error = function(e){
+      message("There was an error in extracting characterization motifs (be_6). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+      tokens$amod_adj <<- NA
+    })
+    
     ###############################################################################################
-    ##### Rule: Being adjective noun conjunct
-    ##### Example: "Steve and ENTITY are nice, humble, and cool persons." (nice)
     if(fast){
-      tokens$being_adj_nconj = NA
+      tokens$being_adj_nconj = 
+        tokens$appos_char = 
+        tokens$being_adj_vconj = 
+        tokens$being_adj_xcomp = NA
+    
     } else {
       tryCatch({
-        being_adj_nconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                 parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                         parents(pos = c("AUX", "VERB"),
-                                                 children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("acomp", "attr"), phrase_replacement = NA,
-                                                          label = "Motif",
-                                                          fill = F,
-                                                          children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("conj", "appos", "amod"), req = F, phrase_replacement = NA,
-                                                                   label = "Motif",
-                                                                   fill = F, depth = 3
-                                                          )
-                                                 )
-                                         )
-                                 )
-        )
-
-        tokens = tokens %>% annotate_tqueries("being_adj_nconj", being_adj_nconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::be_2(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+        message("There was an error in extracting characterization motifs (be_2). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$being_adj_nconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Appos parents
-    ##### Example: "My friend ENTITY came." (friend)
-    if(fast){
-      tokens$appos_char = NA
-    } else {
       tryCatch({
-        appos_char = tquery(appos_child = "appos_child",
-                            phrase_replacement = NA,
-                            label = "Motif",
-                            fill = F
-        )
-
-
-        tokens = tokens %>% annotate_tqueries("appos_char", appos_char, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::be_3(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+        message("There was an error in extracting characterization motifs (be_3). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$appos_char <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Being adjective as conjuncted verb
-    ##### Example: "ENTITY won but remained sad and unmoved." (sad, unmoved)
-    if(fast){
-      tokens$being_adj_vconj = NA
-    } else {
       tryCatch({
-        being_adj_vconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                 parents(pos = c("VERB", "AUX"),
-                                         children(pos = c("AUX", "VERB"), relation = "conj",
-                                                  not_children(relation = "nsubj", depth = 1),
-                                                  children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("acomp", "attr"), phrase_replacement = NA,
-                                                           label = "Motif",
-                                                           fill = F,
-                                                           children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("conj", "appos", "amod"), req = F, phrase_replacement = NA,
-                                                                    label = "Motif",
-                                                                    fill = F, depth = 3
-                                                           )
-                                                  )
-                                         )
-                                 )
-        )
-
-        tokens = tokens %>% annotate_tqueries("being_adj_vconj", being_adj_vconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::be_4(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+        message("There was an error in extracting characterization motifs (be_4). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$being_adj_vconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Being something as xcomp clause verb
-    ##### Example: "ENTITY wants to be president." (president)
-    ##### Example: "ENTITY tries to be a good president." (good, president)
-    if(fast){
-      tokens$being_adj_xcomp = NA
-    } else {
       tryCatch({
-        being_adj_xcomp = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                 parents(pos = c("VERB", "AUX"),
-                                         children(pos = c("AUX", "VERB"), relation = "xcomp",
-                                                  not_children(relation = "nsubj", depth = 1),
-                                                  children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("acomp", "attr"), phrase_replacement = NA,
-                                                           label = "Motif",
-                                                           fill = F,
-                                                           children(pos = c("ADJ", "NOUN", "PROPN"), relation = c("conj", "appos", "amod"), req = F, phrase_replacement = NA,
-                                                                    label = "Motif",
-                                                                    fill = F, depth = 3
-                                                           )
-                                                  )
-                                         )
-                                 )
-        )
-
-        tokens = tokens %>% annotate_tqueries("being_adj_xcomp", being_adj_xcomp, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::be_5(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+        message("There was an error in extracting characterization motifs (be_5). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$being_adj_xcomp <<- NA
       })
     }
 
 
-
-    ###############################################################################################
-    ##### Rule: Amod adjective
-    ##### Example: "Steven got a nice, young ENTITY." (nice)
-    tryCatch({
-      amod_adj = tquery(OR(token = entities, appos_child = "appos_child"),
-                        children(pos = "ADJ", relation = "amod", phrase_replacement = NA,
-                                 label = "Motif",
-                                 fill = F))
-
-      tokens = tokens %>% annotate_tqueries("amod_adj", amod_adj, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-    }, error = function(e){
-      message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
-      tokens$amod_adj <<- NA
-    })
-
     if(be_entity){
       ###############################################################################################
-      ##### Rule: Being an entity
-      ##### Example: "His favorite cousin was entity." (cousin)
       tryCatch({
-        being_entity = tquery(OR(token = entities, appos_child = "appos_child"), relation = "attr",
-                              parents(pos = c("VERB", "AUX"), lemma = "be",
-                                      children(pos = c("NOUN", "PROPN"), relation = "nsubj",
-                                               phrase_replacement = NA,
-                                               label = "Motif",
-                                               fill = F)
-                              )
-        )
-
-        tokens = tokens %>% annotate_tqueries("being_entity", being_entity, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+        tokens = semgram:::be_7(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+        message("There was an error in extracting characterization motifs (be_7). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
         tokens$being_entity <<- NA
       })
 
-
-
       ###############################################################################################
-      ##### Rule: Being an entity with conjunct
-      ##### Example: "His favorite cousins were Steve and ENTITY." (cousin)
       if(fast){
         tokens$being_entity_c = NA
       } else {
         tryCatch({
-          being_entity_c = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                  parents(pos = c("NOUN", "PROPN", "PRON"), relation = "attr",
-                                          parents(pos = c("VERB", "AUX"), lemma = "be",
-                                                  children(pos = c("NOUN", "PROPN"), relation = "nsubj",
-                                                           phrase_replacement = NA,
-                                                           label = "Motif",
-                                                           fill = F)
-                                          )
-                                  )
-          )
-
-          tokens = tokens %>% annotate_tqueries("being_entity_c", being_entity_c, overwrite = T, copy = F)
-          tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+          tokens = semgram:::be_8(tokens, entities, verb_pos, agent_patient_pos)
         }, error = function(e){
-          message("There was an error in extracting characterization motifs. Some characterization motifs might not have been extracted properly.")
+          message("There was an error in extracting characterization motifs (be_8). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
           tokens$being_entity_c <<- NA
         })
       }
@@ -2308,356 +752,83 @@ extract_motifs = function(tokens = NULL,
   }
 
 
-
-
-
   ###############################################################################################
   ########################################Posessions#############################################
   ###############################################################################################
   if("H" %in% motif_classes){
     if(verbose){cat("Extracting possessions\n")}
     ###############################################################################################
-    ##### Rule: A possesive of entity
-    ##### Example: "He liked ENTITY's frinds, spouse, and family." (friends, spouse, family)
     tryCatch({
-      posessive_o = tquery(OR(token = entities, appos_child = "appos_child"), relation = "poss",
-                           parents(pos = c("NOUN", "PROPN"),
-                                   label = "Motif",
-                                   fill = F,
-                                   children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                            label = "Motif",
-                                            fill = F,
-                                            children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                                     label = "Motif",
-                                                     fill = F
-                                            )
-                                   )
-                           )
-      )
-
-      tokens = tokens %>% annotate_tqueries("posessive_o", posessive_o, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
+      tokens = semgram:::H_1(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting posession motifs. Some posession motifs might not have been extracted properly.")
+      message("There was an error in extracting posession motifs (H_1). Some posession motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$posessive_o <<- NA
     })
-
-
-
-    ###############################################################################################
-    ##### Rule: A possesive of entity
-    ##### Example: "The breaks of the ENTITIY were broken." (breaks)
-    ##### Note: we look for both parent and children conjunctions because the dependency trees predicted acan be highly
-    #####       irregular on this regard.
-    if(fast){
-      tokens$posessive_of = NA
-    } else {
-      tryCatch({
-        posessive_of = tquery(OR(token = entities, appos_child = "appos_child"), relation = "pobj",
-                             parents(token =  "of", relation = "prep",
-                                     parents(pos = c("NOUN", "PROPN"),
-                                             label = "Motif",
-                                             fill = F,
-                                             parents(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                                      label = "Motif",
-                                                      fill = F
-                                             ),
-                                             children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                                      label = "Motif",
-                                                      fill = F,
-                                                      children(pos = c("NOUN", "PROPN"), relation = "conj", req = F,
-                                                               label = "Motif",
-                                                               fill = F
-                                                      )
-                                             )
-                                      )
-                             )
-        )
-
-        tokens = tokens %>% annotate_tqueries("posessive_of", posessive_of, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-      }, error = function(e){
-        message("There was an error in extracting posession motifs. Some posession motifs might not have been extracted properly.")
-        tokens$posessive_of <<- NA
-      })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of nsubj have act
-    ##### Example: "ENTITY has apples, grapes, and bananas. (apples, grapes, bananas)
     tryCatch({
-      have_nsubj_obj_conj_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                       parents(pos = c("VERB", "AUX"), lemma = "have",
-                                               children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Motif",
-                                                        fill = F,
-                                                        children(pos = agent_patient_pos, relation = c("conj", "appos"), depth = 3, req = F,
-                                                                 label = "Motif",
-                                                                 fill = F
-                                                        )
-                                               )
-                                       )
-      )
-
-      tokens = tokens %>% annotate_tqueries("have_nsubj_obj_conj_act", have_nsubj_obj_conj_act, overwrite = T, copy = F)
-      tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+      tokens = semgram:::H_3(tokens, entities, verb_pos, agent_patient_pos)
     }, error = function(e){
-      message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+      message("There was an error in extracting possession motifs (H_3). Some possession motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       tokens$have_nsubj_obj_conj_act <<- NA
     })
 
-
-
     ###############################################################################################
-    ##### Rule: Object of nsubj have act with conjunct noun
-    ##### Example: "Joe and ENTITY have apples." (apples)
     if(fast){
+      tokens$posessive_of = NA
       tokens$have_nsubj_obj_conj = NA
-    } else {
-      tryCatch({
-        have_nsubj_obj_conj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                     parents(pos = agent_patient_pos, relation = "nsubj",
-                                             parents(pos = c("VERB", "AUX"), lemma = "have",
-                                                     children(pos = agent_patient_pos, relation = c("dobj", "dative"), label = "Motif",
-                                                              fill = F,
-                                                              children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                       label = "Motif", fill = F, depth = 3
-                                                              )
-                                                     )
-                                             )
-                                     )
-        )
-
-        tokens = tokens %>% annotate_tqueries("have_nsubj_obj_conj", have_nsubj_obj_conj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
-      }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
-      })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of second conjuncted have verb
-    ##### Example: "ENTITY came and had a cakes." (cake)
-    if(fast){
       tokens$have_nsubj_conj_obj_act = NA
+      tokens$have_nsubj_conj_subj_cons_obj = NA
+      tokens$have_xcomp_act_obj = NA
+      tokens$have_xcomp_act_obj_vconj = NA
+      tokens$have_xcomp_act_obj_nconj = NA
+      tokens$have_xcomp_act_obj_nconj_vconj = NA
+    
     } else {
       tryCatch({
-        have_nsubj_conj_obj_act = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                         parents(pos = c("VERB", "AUX"),
-                                                 children(pos = c("VERB", "AUX"), relation = "conj",
-                                                          lemma = "have",
-                                                          not_children(relation = "nsubj", depth = 1),
-                                                          children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                   label = "Motif",
-                                                                   fill = F,
-                                                                   children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                            label = "Motif", req = F, depth = 3,
-                                                                            fill = F
-                                                                   )
-                                                          )
-                                                 )
-                                         )
-        )
-
-
-        tokens = tokens %>%
-          annotate_tqueries("have_nsubj_conj_obj_act", have_nsubj_conj_obj_act, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_2(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting posession motifs (H_2). Some posession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
+        tokens$posessive_of <<- NA
+      })
+      tryCatch({
+        tokens = semgram:::H_4(tokens, entities, verb_pos, agent_patient_pos)
+      }, error = function(e){
+        message("There was an error in extracting possession motifs (H_4). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
+        tokens$have_nsubj_obj_conj <<- NA
+      })
+      tryCatch({
+        tokens = semgram:::H_5(tokens, entities, verb_pos, agent_patient_pos)
+      }, error = function(e){
+        message("There was an error in extracting possession motifs (H_5). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_nsubj_conj_obj_act <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of second conjuncted have verb with actor in conjunct position.
-    ##### Example: "Joe and ENTITY came and had a cake." (Joe, Sue, Michael)
-    if(fast){
-      tokens$have_nsubj_conj_subj_cons_obj = NA
-    } else {
       tryCatch({
-        have_nsubj_conj_subj_cons_obj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                               parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                       parents(pos = c("VERB", "AUX"),
-                                                               children(pos = c("VERB", "AUX"), relation = "conj",
-                                                                        lemma = "have",
-                                                                        not_children(relation = "nsubj", depth = 1),
-                                                                        children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                                 label = "Motif",
-                                                                                 fill = F,
-                                                                                 children(pos = agent_patient_pos, relation = c("conj", "appos"),
-                                                                                          label = "Motif", req = F, depth = 3,
-                                                                                          fill = F
-                                                                                 )
-                                                                        )
-                                                               )
-                                                       )
-                                               )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("have_nsubj_conj_subj_cons_obj", have_nsubj_conj_subj_cons_obj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_6(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting possession motifs (H_6). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_nsubj_conj_subj_cons_obj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause have verb
-    ##### Example: "ENTITY wants to have rice." (rice)
-    if(fast){
-      tokens$have_xcomp_act_obj = NA
-    } else {
       tryCatch({
-        have_xcomp_act_obj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                    parents(pos = c("VERB", "AUX"),
-                                            children(pos = c("VERB", "AUX"), relation = "xcomp",
-                                                     lemma = "have",
-                                                     not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                     not_children(relation = "nsubj"),
-                                                     children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                              label = "Motif", fill = F,
-                                                              children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                       label = "Motif", fill = F, depth = 3
-                                                              )
-                                                     )
-                                            )
-                                    )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("have_xcomp_act_obj", have_xcomp_act_obj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_7(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting possession motifs (H_7). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_xcomp_act_obj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Object of verb with xcomp clause and have-verb conjunct
-    ##### Example: "ENTITY wants to eat and have a conversation." (rice, grapes, steak)
-    if(fast){
-      tokens$have_xcomp_act_obj_vconj = NA
-    } else {
       tryCatch({
-        have_xcomp_act_obj_vconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "nsubj",
-                                          parents(pos = c("VERB", "AUX"),
-                                                  children(pos = "VERB", relation = "xcomp",
-                                                           not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                           not_children(relation = "nsubj"),
-                                                           children(pos = c("VERB", "AUX"), relation = "conj",
-                                                                    lemma = "have",
-                                                                    children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                             label = "Motif", fill = F,
-                                                                             children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                      label = "Motif", fill = F, depth = 3
-                                                                             )
-                                                                    )
-                                                           )
-                                                  )
-                                          )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("have_xcomp_act_obj_vconj", have_xcomp_act_obj_vconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_8(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting possession motifs (H_8). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_xcomp_act_obj_vconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of have-verb with xcomp clause and noun conjunct and subject
-    ##### Example: "Jonathan and ENTITY want to have rice." (rice)
-    if(fast){
-      tokens$have_xcomp_act_obj_nconj = NA
-    } else {
       tryCatch({
-        have_xcomp_act_obj_nconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                          parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                  parents(pos = c("VERB", "AUX"),
-                                                          children(pos = c("VERB", "AUX"), relation = "xcomp",
-                                                                   not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                   not_children(relation = "nsubj"),
-                                                                   lemma = "have",
-                                                                   children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                            label = "Motif", fill = F,
-                                                                            children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                     label = "Motif", fill = F, depth = 3
-                                                                            )
-                                                                   )
-                                                          )
-                                                  )
-                                          )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("have_xcomp_act_obj_nconj", have_xcomp_act_obj_nconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_9(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting possession motifs (H_9). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_xcomp_act_obj_nconj <<- NA
       })
-    }
-
-
-
-    ###############################################################################################
-    ##### Rule: Objects of have-verb with xcomp clause and noun and verb conjunct
-    ##### Example: "Jonathan and ENTITY want to swim and eat lunch." (lunch)
-    if(fast){
-      tokens$have_xcomp_act_obj_nconj_vconj = NA
-    } else {
       tryCatch({
-        have_xcomp_act_obj_nconj_vconj = tquery(OR(token = entities, appos_child = "appos_child"), relation = "conj",
-                                                parents(pos = c("NOUN", "PROPN", "PRON"), relation = "nsubj",
-                                                        parents(pos = c("VERB", "AUX"),
-                                                                children(pos = "VERB", relation = "xcomp",
-                                                                         not_children(pos = "AUX", lemma = "be", relation = "auxpass"),
-                                                                         not_children(relation = "nsubj"),
-                                                                         children(pos = c("VERB", "AUX"), relation = "conj",
-                                                                                  lemma = "have",
-                                                                                  children(pos = agent_patient_pos, relation = c("dobj", "dative"),
-                                                                                           label = "Motif", fill = F,
-                                                                                           children(pos = agent_patient_pos, relation = c("conj", "appos"), req = F,
-                                                                                                    label = "Motif", fill = F, depth = 3
-                                                                                           )
-                                                                                  )
-                                                                         )
-
-                                                                )
-                                                        )
-                                                )
-        )
-
-        tokens = tokens %>%
-          annotate_tqueries("have_xcomp_act_obj_nconj_vconj", have_xcomp_act_obj_nconj_vconj, overwrite = T, copy = F)
-        tokens[,c(ncol(tokens)-1,ncol(tokens))] = NULL
-
+        tokens = semgram:::H_10(tokens, entities, verb_pos, agent_patient_pos)
       }, error = function(e){
-        message("There was an error in extracting possession motifs. Some possession motifs might not have been extracted properly.")
+        message("There was an error in extracting possession motifs (H_10). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         tokens$have_xcomp_act_obj_nconj_vconj <<- NA
       })
     }
