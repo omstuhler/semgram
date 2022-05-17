@@ -19,8 +19,7 @@ library(devtools)
 library(spacyr)
 
 # Installing semgram
-#devtools::install_github("omstuhler/semgram")
-devtools::install("~/Desktop/Development/semgram_with_triplet_function")
+devtools::install_github("omstuhler/semgram")
 library(semgram)
 ```
 
