@@ -14,6 +14,7 @@
 #' @param parse_multi_token_entities Should we multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE.
 #' @param extract Parameter defines whether we extract the "lemma" or the "token" of a motif. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.
 #' @param markup If TRUE, motifs will also be provided as collapsed markup tokens, e.g. "aP_ask_Harry". Defaults to FALSE.
+#' @param add_sentence If TRUE, the sentence for each motif is added to the extracted motif. Note that this is done by simply pasting together the tokens of the sentence, so that the representation might differ minimally from the original text. Nonetheless, this can be helpful for validation and for a mode of analyses that switches between distant and close readings of the text. Defaults to FALSE. Note that setting this to TRUE will noticeably increase runtime.
 #' @param be_entity Should things that are linked to an entity via "being" (or one of it's lemmas) be considered as characterization motifs?
 #' For example, say we are extracting characterization motifs around the entity "immigrants" in the sentence "my parents are immigrants", should we extract the characterization motif "be_parent"? Defaults to TRUE.
 #' @param get_aux_verbs Should auxiliary verbs (e.g. can, could, may, must, etc.) be collected as actions? Defaults to FALSE.
@@ -37,6 +38,7 @@ extract_motifs = function(tokens,
                           parse_multi_token_entities = T,
                           extract = "lemma",
                           markup = F,
+                          add_sentence = F,
                           be_entity = T,
                           get_aux_verbs = F,
                           aux_verb_markup = T,
@@ -750,6 +752,10 @@ extract_motifs = function(tokens,
       } else {character(0)}
   } else {character(0)}
   if(markup & length(actions) > 0){actions$markup = paste0("a_", actions$action)}
+  if(add_sentence & length(actions) > 0){
+    actions$sentence = mapply(semgram:::retrieve_sentence, actions$doc_id, str_extract(actions$ann_id, "(?<=[.])[0-9]+(?=.)"))
+  }
+  
   
   ###############################################################################################
   treatments = if("t" %in% motif_classes){
@@ -771,6 +777,9 @@ extract_motifs = function(tokens,
     } else {character(0)}
   } else {character(0)}
   if(markup & length(treatments) > 0){treatments$markup = paste0("t_", treatments$treatment)}
+  if(add_sentence & length(treatments) > 0){
+    treatments$sentence = mapply(semgram:::retrieve_sentence, treatments$doc_id, str_extract(treatments$ann_id, "(?<=[.])[0-9]+(?=.)"))
+  }
   
   ###############################################################################################
   characterizations = if("be" %in% motif_classes){
@@ -796,6 +805,9 @@ extract_motifs = function(tokens,
     } else {character(0)}
   } else {character(0)}
   if(markup & length(characterizations) > 0){characterizations$markup = paste0("be_", characterizations$characterization)}
+  if(add_sentence & length(characterizations) > 0){
+    characterizations$sentence = mapply(semgram:::retrieve_sentence, characterizations$doc_id, str_extract(characterizations$ann_id, "(?<=[.])[0-9]+(?=.)"))
+  }
   
   ###############################################################################################
   possessions = if("H" %in% motif_classes){
@@ -823,6 +835,9 @@ extract_motifs = function(tokens,
     } else {character(0)}
   } else {character(0)}
   if(markup & length(possessions) > 0){possessions$markup = paste0("H_", possessions$Possession)}
+  if(add_sentence & length(possessions) > 0){
+    possessions$sentence = mapply(semgram:::retrieve_sentence, possessions$doc_id, str_extract(possessions$ann_id, "(?<=[.])[0-9]+(?=.)"))
+  }
   
   ################################################################################################
   agent_treatments = if("At" %in% motif_classes){
@@ -852,6 +867,9 @@ extract_motifs = function(tokens,
   if(length(agent_treatments)>0){
     agent_treatments = agent_treatments[,c("doc_id", "ann_id", "Entity", "Agent", "treatment")]
     if(markup){agent_treatments$markup = paste0("At_", agent_treatments$Agent, "_", agent_treatments$treatment)}
+  }
+  if(add_sentence & length(agent_treatments) > 0){
+    agent_treatments$sentence = mapply(semgram:::retrieve_sentence, agent_treatments$doc_id, str_extract(agent_treatments$ann_id, "(?<=[.])[0-9]+(?=.)"))
   }
   
   ################################################################################################
@@ -891,6 +909,9 @@ extract_motifs = function(tokens,
   if(length(action_Patients) >0){
     action_Patients = action_Patients[,c("doc_id", "ann_id", "Entity",  "action", "Patient")]
     if(markup){action_Patients$markup = paste0("aP_", action_Patients$action, "_", action_Patients$Patient)}
+  }
+  if(add_sentence & length(action_Patients) > 0){
+    action_Patients$sentence = mapply(semgram:::retrieve_sentence, action_Patients$doc_id, str_extract(action_Patients$ann_id, "(?<=[.])[0-9]+(?=.)"))
   }
   
   ##### Combine to list object
