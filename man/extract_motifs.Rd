@@ -8,6 +8,7 @@ extract_motifs(
   tokens = NULL,
   entities = NULL,
   motif_classes = c("t", "a", "be", "H", "At", "aP"),
+  custom_cols = NA,
   fast = F,
   parse_multi_token_entities = T,
   extract = "lemma",
@@ -31,6 +32,8 @@ Multi-token strings such as "Harry Potter" will be parsed if parse_multi_token_e
 \item{motif_classes}{A character vector specifying which motif classes should be considered in the extraction.
 This can include "t" for treatments, "a" for actions, "be" for characterizations, "H" for possessions, as well as "At" and "aP" for agent-treatment and action-patient motifs respectively.
 By default, all motif classes are considered. Note, however, that run time increases with the number of motif classes considered.}
+
+\item{custom_cols}{The columns in the tokens object should be labeled according to spacyr's default, which is "doc_id", "sentence_id", "token_id", "token", "lemma", "pos", "head_token_id" , "dep_rel". If your the columns in your tokens object are not labeled according to this scheme, please re-label them or provide the matching column names to custom_cols in the corresponding order.}
 
 \item{fast}{If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
 
