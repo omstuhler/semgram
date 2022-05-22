@@ -62,14 +62,14 @@ extract_motifs = function(tokens = NULL,
   ###############################################################################################
   ##### If custom_cols is provided, adjust the columns
   if(!is.na(custom_cols)){
-    names(tokens)[custom_cols[1]] = "doc_id"
-    names(tokens)[custom_cols[2]] = "sentence_id"
-    names(tokens)[custom_cols[3]] = "token_id"
-    names(tokens)[custom_cols[4]] = "token"
-    names(tokens)[custom_cols[5]] = "lemma"
-    names(tokens)[custom_cols[6]] = "pos"
-    names(tokens)[custom_cols[7]] = "head_token_id"
-    names(tokens)[custom_cols[8]] = "dep_rel"
+    names(tokens)[which(names(tokens) == custom_cols[1])] = "doc_id"
+    names(tokens)[which(names(tokens) == custom_cols[2])] = "sentence_id"
+    names(tokens)[which(names(tokens) == custom_cols[3])] = "token_id"
+    names(tokens)[which(names(tokens) == custom_cols[4])] = "token"
+    names(tokens)[which(names(tokens) == custom_cols[5])] = "lemma"
+    names(tokens)[which(names(tokens) == custom_cols[6])] = "pos"
+    names(tokens)[which(names(tokens) == custom_cols[7])] = "head_token_id"
+    names(tokens)[which(names(tokens) == custom_cols[8])] = "dep_rel"
   }
   
   ###############################################################################################
