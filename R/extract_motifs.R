@@ -29,10 +29,10 @@
 #' @return A list with six dataframes, one for each motif class. List element of motif classes not specified in the motif_classes parameter will be empty.
 #' @export
 
-extract_motifs = function(tokens = NULL,
-                          entities = NULL,
+extract_motifs = function(tokens,
+                          entities,
                           motif_classes = c("t", "a", "be", "H", "At", "aP"),
-                          custom_cols = NA,
+                          custom_cols,
                           fast = F,
                           parse_multi_token_entities = T,
                           extract = "lemma",
@@ -52,24 +52,28 @@ extract_motifs = function(tokens = NULL,
   
   ###############################################################################################
   ##### Text input
-  if(!exists("tokens")){
-    message("It seems you didn't provide a tokens object.\n")
+  if(missing("tokens")){
+    stop("It seems you didn't provide a tokens object.", call. = FALSE)
   }
-  if(!exists("entities")){
-    message("It seems you didn't specify any core entities to extract motifs around.\n")
+  if(missing("entities")){
+    stop("It seems you didn't specify any core entities to extract motifs around.", call. = FALSE)
   }
 
   ###############################################################################################
   ##### If custom_cols is provided, adjust the columns
-  if(!is.na(custom_cols)){
-    names(tokens)[which(names(tokens) == custom_cols[1])] = "doc_id"
-    names(tokens)[which(names(tokens) == custom_cols[2])] = "sentence_id"
-    names(tokens)[which(names(tokens) == custom_cols[3])] = "token_id"
-    names(tokens)[which(names(tokens) == custom_cols[4])] = "token"
-    names(tokens)[which(names(tokens) == custom_cols[5])] = "lemma"
-    names(tokens)[which(names(tokens) == custom_cols[6])] = "pos"
-    names(tokens)[which(names(tokens) == custom_cols[7])] = "head_token_id"
-    names(tokens)[which(names(tokens) == custom_cols[8])] = "dep_rel"
+  if(!missing("custom_cols")){
+    if(length(custom_cols) != 8){
+      stop("You provided a custom columns vector of length other than 8.", call. = FALSE)
+    } else {
+      names(tokens)[which(names(tokens) == custom_cols[1])] = "doc_id"
+      names(tokens)[which(names(tokens) == custom_cols[2])] = "sentence_id"
+      names(tokens)[which(names(tokens) == custom_cols[3])] = "token_id"
+      names(tokens)[which(names(tokens) == custom_cols[4])] = "token"
+      names(tokens)[which(names(tokens) == custom_cols[5])] = "lemma"
+      names(tokens)[which(names(tokens) == custom_cols[6])] = "pos"
+      names(tokens)[which(names(tokens) == custom_cols[7])] = "head_token_id"
+      names(tokens)[which(names(tokens) == custom_cols[8])] = "dep_rel" 
+    }
   }
   
   ###############################################################################################
