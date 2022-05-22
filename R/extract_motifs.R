@@ -9,6 +9,7 @@
 #' @param motif_classes A character vector specifying which motif classes should be considered in the extraction.
 #' This can include "t" for treatments, "a" for actions, "be" for characterizations, "H" for possessions, as well as "At" and "aP" for agent-treatment and action-patient motifs respectively.
 #' By default, all motif classes are considered. Note, however, that run time increases with the number of motif classes considered.
+#' @param custom_cols The columns in the tokens object should be labeled according to spacyr's default, which is "doc_id", "sentence_id", "token_id", "token", "lemma", "pos", "head_token_id" , "dep_rel". If your the columns in your tokens object are not labeled according to this scheme, please re-label them or provide the matching column names to custom_cols in the corresponding order.
 #' @param fast If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.
 #' @param parse_multi_token_entities Should we multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE.
 #' @param extract Parameter defines whether we extract the "lemma" or the "token" of a motif. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.
@@ -31,6 +32,7 @@
 extract_motifs = function(tokens = NULL,
                           entities = NULL,
                           motif_classes = c("t", "a", "be", "H", "At", "aP"),
+                          custom_cols = NA,
                           fast = F,
                           parse_multi_token_entities = T,
                           extract = "lemma",
@@ -47,7 +49,7 @@ extract_motifs = function(tokens = NULL,
   ###############################################################################################
   #####################################Pre-processing############################################
   ###############################################################################################
-
+  
   ###############################################################################################
   ##### Text input
   if(!exists("tokens")){
@@ -58,7 +60,21 @@ extract_motifs = function(tokens = NULL,
   }
 
   ###############################################################################################
+  ##### If custom_cols is provided, adjust the columns
+  if(!is.na(custom_cols)){
+    names(tokens)[custom_cols[1]] = "doc_id"
+    names(tokens)[custom_cols[2]] = "sentence_id"
+    names(tokens)[custom_cols[3]] = "token_id"
+    names(tokens)[custom_cols[4]] = "token"
+    names(tokens)[custom_cols[5]] = "lemma"
+    names(tokens)[custom_cols[6]] = "pos"
+    names(tokens)[custom_cols[7]] = "head_token_id"
+    names(tokens)[custom_cols[8]] = "dep_rel"
+  }
+  
+  ###############################################################################################
   ##### Unify column labels in tokens dataframe
+  ##### Development Note: this should be taken out and subsequent code adjusted.
   if("sentence_id" %in% names(tokens)){
     names(tokens)[which(names(tokens) == "sentence_id")] = "sentence"
   }
