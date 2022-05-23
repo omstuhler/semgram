@@ -170,9 +170,10 @@ pre code {
 
 <div id="load-packages" class="section level1">
 <h1>Load packages</h1>
-<p>For this demo of <code>semgram</code>, we will need <a href="https://github.com/quanteda/spacyr"><code>spacyr</code></a>, a wrapper around the popular spaCy Python library. <code>spacyr</code> is an extension of the popular <code>quanteda</code> library you may be familiar with. If you haven’t installed <code>spacyr</code>, you can find instructions for getting <code>spacyr</code> to run on the package’s <a href="https://cran.r-project.org/web/packages/spacyr/readme/README.html">website</a>. <code>spacyr</code> let’s you install both Python and spaCy with a single line of code from within R.</p>
+<p>This is a demo of the <code>semgram</code> package. For a detailed account of the method, please refer to the <a href="https://journals.sagepub.com/doi/full/10.1177/00491241221099551">paper</a>.</p>
+<p>For this demo, we will need <a href="https://github.com/quanteda/spacyr"><code>spacyr</code></a>, a wrapper around the popular spaCy Python library. <code>spacyr</code> is an extension of the popular <code>quanteda</code> library you may be familiar with. If you haven’t installed <code>spacyr</code>, you can find instructions for getting <code>spacyr</code> to run on the package’s <a href="https://cran.r-project.org/web/packages/spacyr/readme/README.html">website</a>. <code>spacyr</code> let’s you install both Python and spaCy with a single line of code from within R.</p>
 <p>Furthermore, we will need <a href="https://cran.r-project.org/web/packages/devtools/index.html"><code>devtools</code></a> - a package for development tools we will use to install <code>semgram</code>.</p>
-<p>Finally, <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a> package maintained by Kasper Welbers and Wouter van Atteveldt. <code>rsyntax</code> is an general library for querying and reshaping dependency trees and was used to implement the rules contained in <code>semgram</code>. If you find yourself wanting to extract relations other than those incorporated in the <code>semgram</code> grammar and don’t mind implementing them from scratch, <code>rsyntax</code> is the way to go.</p>
+<p>Finally, <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a> package maintained by Kasper Welbers and Wouter van Atteveldt. <code>rsyntax</code> is an general library for querying and reshaping dependency trees and was used to implement the rules contained in <code>semgram</code>. If you find yourself wanting to extract relations other than those incorporated in the <code>semgram</code> grammar and don’t mind implementing them from scratch, <code>rsyntax</code> is the way to go. You might also find their <a href="https://github.com/kasperwelbers/rsyntaxRecipes"><code>rsyntaxRecipes</code></a> useful.</p>
 <pre class="r"><code>library(devtools)
 library(spacyr)
 
@@ -190,8 +191,8 @@ library(semgram)</code></pre>
 # spacy_download_langmodel(&quot;en_core_web_sm&quot;)
 spacy_initialize(model = &quot;en_core_web_sm&quot;, refresh_settings = T)</code></pre>
 </div>
-<div id="parsing-a-sentence" class="section level1">
-<h1>Parsing a sentence</h1>
+<div id="parse-a-sentence" class="section level1">
+<h1>Parse a sentence</h1>
 <p>In order to use <code>semgram</code>, we first need to pass any text through the spaCy language pipeline. By default, <code>spacyr</code> does not annotate dependency relations. We therefore have to set <code>dependency=T</code> when annotating any text that we would like to pass to semgram.</p>
 <p>The output of <code>spacy_parse()</code> is a data frame in which rows correspond to tokens. The <code>pos</code> column indicated the part of speech tag assigned to each token. The columns <code>head_token</code> and <code>dep_rel</code> present the output of the dependency parser module. Note how every token points to exactly one head token. “chase” is the root of the sentence and points to itself. “Emil” on the other hand, is the nominal subject (“nsubj”) of its head “chase”.</p>
 <pre class="r"><code>text = &quot;Emil chased the thief.&quot;
@@ -263,8 +264,8 @@ knitr::kable(tokens_df)</code></pre>
 </tr>
 </tbody>
 </table>
-<div id="extracting-semantic-motifs" class="section level2">
-<h2>Extracting semantic motifs</h2>
+<div id="extract-semantic-motifs" class="section level2">
+<h2>Extract semantic motifs</h2>
 <p>The annotated tokens dataframe can now be passed to <code>semgram</code>’s <code>extract_motifs</code>. When doing so, we also need to specify which core entities we would like to extract motifs around. Here, we choose to extract motifs around “Emil”. <code>extract_motifs</code> returns a list of dataframes for each motif class for which we extracted motifs and for which motifs were found. <code>doc_id</code> and <code>ann_id</code> are inherited from the parsed tokens object, and allow to trace back where the motif occurred.</p>
 <p>The sentence we pass to <code>extract_motifs</code> contains two distinct motifs: the action motif a_chase, and the composite action-patient motif aP_chase_thief. Note that patient motifs (such as P_thief) can be considered independently, if so desired.</p>
 <pre class="r"><code>motifs = extract_motifs(tokens = tokens_df, entities = c(&quot;Emil&quot;), markup = T)
@@ -400,9 +401,22 @@ str(motifs)</code></pre>
 ##   ..$ action : chr [1:2] &quot;receive&quot; &quot;announce&quot;
 ##   ..$ Patient: chr [1:2] &quot;criticism&quot; &quot;plan&quot;</code></pre>
 </div>
-<div id="reproducing-table-2" class="section level2">
-<h2>Reproducing Table 2</h2>
-<p>Table 2 of the manuscript ‘Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry’ showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.” Because Patient (Agent) motifs are contained in the action-Patient (Agent-treatment) motifs, we only extract the composite motifs here which should, however, be equivalent.</p>
+<div id="inspect-sentences-around-motifs" class="section level2">
+<h2>Inspect sentences around motifs</h2>
+<p>It can also be useful to add the sentence in which a motif was contained, which can be done by setting <code>add_sentence = TRUE</code>. Note that the sentence text is generated by simply pasting together the tokens of the sentence, so that the representation might differ minimally from the original text. Nonetheless, this can be helpful for validation and for a mode of analyses that switches between distant and close readings of the text.</p>
+<pre class="r"><code>motifs = extract_motifs(tokens = tokens, entities = &quot;Biden&quot;, add_sentence = T)
+str(motifs$action_Patients)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1 obs. of  6 variables:
+##  $ doc_id  : chr &quot;text1&quot;
+##  $ ann_id  : Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##  $ Entity  : chr &quot;Biden&quot;
+##  $ action  : chr &quot;announce&quot;
+##  $ Patient : chr &quot;plan&quot;
+##  $ sentence: chr &quot;The plan was announced early this week by Biden.&quot;</code></pre>
+</div>
+<div id="reproduce-table-2" class="section level2">
+<h2>Reproduce Table 2</h2>
+<p>Table 2 of the manuscript <a href="https://journals.sagepub.com/doi/full/10.1177/00491241221099551">‘Who Does What to Whom? Making Text Parsers Work for Sociological Inquiry’</a> showcases a set of exemplary sentences together with the extracted motifs for different motif classes. These sentences are mostly short but contain considerable syntactic variation. Here, we reproduce this table by passing the sentences to ‘extract_motifs’. To do this, we first create a dataframe with all sentences, together with the corresponding motif class. In order to make the text more realistic, we replace “ENTITY” with “Emil.” Because Patient (Agent) motifs are contained in the action-Patient (Agent-treatment) motifs, we only extract the composite motifs here which should, however, be equivalent.</p>
 <pre class="r"><code>actions = data.frame(&quot;Motif class&quot; = &quot;a&quot;,
                      &quot;Sentence&quot; = c(&quot;Emil calls.&quot;,
                                     &quot;Emil can call.&quot;,
@@ -774,12 +788,12 @@ time_gap_fast
 cat(&quot;\nTime saved:&quot;,
     round(1-as.numeric(time_gap_fast, units=&quot;secs&quot;)/as.numeric(time_gap, units=&quot;secs&quot;),2)*100,&quot;%&quot;)</code></pre>
 <pre><code>## Time normal mode:
-## Time difference of 8.289681 secs
+## Time difference of 6.897689 secs
 ## 
 ## Time fast mode:
-## Time difference of 1.930086 secs
+## Time difference of 1.824466 secs
 ## 
-## Time saved: 77 %</code></pre>
+## Time saved: 74 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes. In the fast mode we are still able to extract most motifs we had discovered in the normal mode. Some motif classes are more heavily affected than others in terms of declining extraction performance. Performance decline is likely to also depend on the syntactic complexity of the text. While the fast mode is not recommended for a serious analysis, it can be helpful for preliminary inspection of data, or if you lack computing power.</p>
 <pre class="r"><code>n_slow = sum(unlist(lapply(motifs, function(x) nrow(x))))
 n_fast = sum(unlist(lapply(motifs_fast, function(x) nrow(x))))
