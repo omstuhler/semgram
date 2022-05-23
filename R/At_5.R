@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Actor of by act with object and noun conjunct (entity)
 ##### Example: "Sue and ENTITY are asked by Peter, Joseph, and Sue." (Peter, ask)

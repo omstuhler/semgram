@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Objects of passive subject with by
 ##### Example: "Joe, Susan, and Michael are asked by ENTITY." (asked, Joe Sue Michael)

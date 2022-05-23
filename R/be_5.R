@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Being something as xcomp clause verb
 ##### Example: "ENTITY wants to be president." (president)

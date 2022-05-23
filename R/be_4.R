@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Being adjective as conjuncted verb
 ##### Example: "ENTITY won but remained sad and unmoved." (sad, unmoved)

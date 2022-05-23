@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of second conjuncted have verb with actor in conjunct position.
 ##### Example: "Joe and ENTITY came and had a cake." (Joe, Sue, Michael)

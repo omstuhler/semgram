@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: nsubj with conjuncted second actor and possibly second verb
 ##### Example: "Joe and ENTITY called Steve" (called)

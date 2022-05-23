@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: nsubj act or conjuncted second verb
 ##### Example: "ENTITY asked Joe." (asked)

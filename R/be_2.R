@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Being adjective noun conjunct
 ##### Example: "Steve and ENTITY is nice but dumb." (nice, dumb)

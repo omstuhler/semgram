@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of verb with xcomp clause and have-verb conjunct
 ##### Example: "ENTITY wants to eat and have a conversation." (rice, grapes, steak)

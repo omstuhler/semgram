@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of nsubj act but ENTITY is conjunct of nominal subject
 ##### Example: "Steven and ENTITY asked Joe, Sue, and Michael." (ask, Joe Sue Michael)

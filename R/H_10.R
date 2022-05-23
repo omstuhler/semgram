@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Objects of have-verb with xcomp clause and noun and verb conjunct
 ##### Example: "Jonathan and ENTITY want to swim and have lunch." (lunch)

@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: noun conjunct of object of nsubj act
 ##### Example: "Joe calls Steve and ENTITY." (calls)

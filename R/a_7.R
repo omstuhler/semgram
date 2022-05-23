@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Passive subject with by verb conjunction and noun conjunction
 ##### Example: "Sue is called and asked by Greg and ENTITY" (called)

@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Objects of passive subject with by and conjuncted verb and conjuncted noun (first verb)
 ##### Example: "Joseph, Sue and Michael were called and asked by Jack and ENTITY." (asked, Joseph Sue Michael)

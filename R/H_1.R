@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: A possesive of entity
 ##### Example: "He liked ENTITY's friends, spouse, and family." (friends, spouse, family)

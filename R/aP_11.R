@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of verb with xcomp clause
 ##### Example: "ENTITY wants to eat rice, grapes, and, steak." (eat, rice grapes steak)

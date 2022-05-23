@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Objects of verb with xcomp clause, conjuncted transitive verb, and ENTITY as subject conjunct
 ##### Example: "Jonathan and ENTITY want to swim and eat rice, grapes, and, steak." (eat, rice grapes steak)

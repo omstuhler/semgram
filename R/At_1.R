@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Actor of nsubj act with object
 ##### Example: "Joseph, Sarah, and Steve call ENTITY." (Joe Sarah Steve, call)

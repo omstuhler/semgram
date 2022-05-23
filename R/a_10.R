@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Verb with xcomp clause and noun conjunct
 ##### Example: "Jack and ENTITY want to eat." (eat)

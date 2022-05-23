@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Actor of by act with object
 ##### Example: "ENTITY is asked by Peter, Joseph, and Sue." (Peter Joseph Sue, ask)

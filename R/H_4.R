@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of nsubj have act with conjunct noun
 ##### Example: "Joe and ENTITY have apples." (apples)

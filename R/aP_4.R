@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Object of conjuncted verb but ENTITY is conjunct of nominal subject
 ##### Example: "Joe and ENTITY came and kissed Joe, Sue, and Michael." (kissed, Joe Sue Michael)

@@ -1,3 +1,6 @@
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+NULL
+
 ###############################################################################################
 ##### Rule: Objects of have-verb with xcomp clause and noun conjunct and subject
 ##### Example: "Jonathan and ENTITY want to have rice." (rice)
