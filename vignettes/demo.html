@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>semgram: a brief demo</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">semgram: a brief demo</h1>
+
+
+
+<div id="load-packages" class="section level1">
+<h1>Load packages</h1>
+<p>This is a demo of the <code>semgram</code> package. For a detailed
+account of the method, please refer to the <a href="https://journals.sagepub.com/doi/full/10.1177/00491241221099551">paper</a>.</p>
+<p>For this demo, we will need <a href="https://github.com/quanteda/spacyr"><code>spacyr</code></a>, a
+wrapper around the popular spaCy Python library. <code>spacyr</code> is
+an extension of the popular <code>quanteda</code> library you may be
+familiar with. If you haven’t installed <code>spacyr</code>, you can
+find instructions for getting <code>spacyr</code> to run on the
+package’s <a href="https://cran.r-project.org/web/packages/spacyr/readme/README.html">website</a>.
+<code>spacyr</code> let’s you install both Python and spaCy with a
+single line of code from within R.</p>
+<p>Furthermore, we will need <a href="https://cran.r-project.org/web/packages/devtools/index.html"><code>devtools</code></a>
+- a package for development tools we will use to install
+<code>semgram</code>.</p>
+<p>Finally, <code>semgram</code> imports and builds on the <a href="https://cran.r-project.org/web/packages/rsyntax/index.html"><code>rsyntax</code></a>
+package maintained by Kasper Welbers and Wouter van Atteveldt.
+<code>rsyntax</code> is an general library for querying and reshaping
+dependency trees and was used to implement the rules contained in
+<code>semgram</code>. If you find yourself wanting to extract relations
+other than those incorporated in the <code>semgram</code> grammar and
+don’t mind implementing them from scratch, <code>rsyntax</code> is the
+way to go. You might also find their <a href="https://github.com/kasperwelbers/rsyntaxRecipes"><code>rsyntaxRecipes</code></a>
+useful.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(spacyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Installing semgram</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;omstuhler/semgram&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(semgram)</span></code></pre></div>
+</div>
+<div id="initialize-spacy-annotation-pipeline" class="section level1">
+<h1>Initialize spaCy annotation pipeline</h1>
+<p>In order to make use of spaCy’s functionality, we first need to
+initialize a spaCy annotation pipelines. These pipelines integrate
+different processing tasks such as tokenization, lemmatization,
+part-of-speech tagging, and dependency parsing. SpaCy currently
+maintains <a href="https://spacy.io/models/en">four English language
+pipelines</a>. You will need to download and initialize one of these
+models which can by done with the <code>spacyr</code> package. The
+models differ primarily in size and the time they take to run. Larger
+models tend to achieve slightly better performance. For this demo, the
+smallest model will suffice (“en_core_web_sm”). All English language
+pipelines employ the same part-of-speech tag set as well as the ClearNLP
+dependency scheme and are therefore compatible with the extraction rules
+implemented in <code>semgram</code>. While spaCy provides annotation
+pipelines for other languages, these use different part-of-speech tag
+sets and dependency schemes, making them incompatible with the
+(current!) version of <code>semgram</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Uncomment for installing spaCy (and miniconda) in a </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># self-contained environment</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># spacy_install()</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Uncomment for downloading the &quot;en_core_web_sm&quot; annotation pipeline</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># spacy_download_langmodel(&quot;en_core_web_sm&quot;)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">spacy_initialize</span>(<span class="at">model =</span> <span class="st">&quot;en_core_web_sm&quot;</span>, <span class="at">refresh_settings =</span> T)</span></code></pre></div>
+</div>
+<div id="parse-a-sentence" class="section level1">
+<h1>Parse a sentence</h1>
+<p>In order to use <code>semgram</code>, we first need to pass any text
+through the spaCy language pipeline. By default, <code>spacyr</code>
+does not annotate dependency relations. We therefore have to set
+<code>dependency=T</code> when annotating any text that we would like to
+pass to semgram.</p>
+<p>The output of <code>spacy_parse()</code> is a data frame in which
+rows correspond to tokens. The <code>pos</code> column indicated the
+part of speech tag assigned to each token. The columns
+<code>head_token</code> and <code>dep_rel</code> present the output of
+the dependency parser module. Note how every token points to exactly one
+head token. “chase” is the root of the sentence and points to itself.
+“Emil” on the other hand, is the nominal subject (“nsubj”) of its head
+“chase”.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>text <span class="ot">=</span> <span class="st">&quot;Emil chased the thief.&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>tokens_df <span class="ot">=</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency=</span>T, <span class="at">entity =</span> F)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(tokens_df)</span></code></pre></div>
+<table style="width:100%;">
+<colgroup>
+<col width="10%" />
+<col width="17%" />
+<col width="13%" />
+<col width="10%" />
+<col width="8%" />
+<col width="8%" />
+<col width="20%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">doc_id</th>
+<th align="right">sentence_id</th>
+<th align="right">token_id</th>
+<th align="left">token</th>
+<th align="left">lemma</th>
+<th align="left">pos</th>
+<th align="right">head_token_id</th>
+<th align="left">dep_rel</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">text1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">Emil</td>
+<td align="left">Emil</td>
+<td align="left">PROPN</td>
+<td align="right">2</td>
+<td align="left">nsubj</td>
+</tr>
+<tr class="even">
+<td align="left">text1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="left">chased</td>
+<td align="left">chase</td>
+<td align="left">VERB</td>
+<td align="right">2</td>
+<td align="left">ROOT</td>
+</tr>
+<tr class="odd">
+<td align="left">text1</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="left">the</td>
+<td align="left">the</td>
+<td align="left">DET</td>
+<td align="right">4</td>
+<td align="left">det</td>
+</tr>
+<tr class="even">
+<td align="left">text1</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="left">thief</td>
+<td align="left">thief</td>
+<td align="left">NOUN</td>
+<td align="right">2</td>
+<td align="left">dobj</td>
+</tr>
+<tr class="odd">
+<td align="left">text1</td>
+<td align="right">1</td>
+<td align="right">5</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">PUNCT</td>
+<td align="right">2</td>
+<td align="left">punct</td>
+</tr>
+</tbody>
+</table>
+<div id="extract-semantic-motifs" class="section level2">
+<h2>Extract semantic motifs</h2>
+<p>The annotated tokens dataframe can now be passed to
+<code>semgram</code>’s <code>extract_motifs</code>. When doing so, we
+also need to specify which core entities we would like to extract motifs
+around. Here, we choose to extract motifs around “Emil”.
+<code>extract_motifs</code> returns a list of dataframes for each motif
+class for which we extracted motifs and for which motifs were found.
+<code>doc_id</code> and <code>ann_id</code> are inherited from the
+parsed tokens object, and allow to trace back where the motif
+occurred.</p>
+<p>The sentence we pass to <code>extract_motifs</code> contains two
+distinct motifs: the action motif a_chase, and the composite
+action-patient motif aP_chase_thief. Note that patient motifs (such as
+P_thief) can be considered independently, if so desired.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens_df, <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;Emil&quot;</span>), <span class="at">markup =</span> T)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs)</span></code></pre></div>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.1&quot;: 1
+##   ..$ Entity: chr &quot;Emil&quot;
+##   ..$ action: chr &quot;chase&quot;
+##   ..$ markup: chr &quot;a_chase&quot;
+##  $ treatments       : chr(0) 
+##  $ characterizations: chr(0) 
+##  $ possessions      : chr(0) 
+##  $ agent_treatments : chr(0) 
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  6 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.2&quot;: 1
+##   ..$ Entity : chr &quot;Emil&quot;
+##   ..$ action : chr &quot;chase&quot;
+##   ..$ Patient: chr &quot;thief&quot;
+##   ..$ markup : chr &quot;aP_chase_thief&quot;</code></pre>
+<p>Moving forward, we extract motifs from a more complex sentence, again
+first passing the sentence through the spaCy annotation pipeline and
+specifying “Emil” as the core entity. We find that the sentence contains
+six distinct motifs: the action motifs “a_start”, “a_run”, and
+“a_chase”; the characterization motifs “be_friend” and “be_brave”; and
+the composite action-patient motif “aP_chase_thief”.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>text <span class="ot">=</span> <span class="st">&quot;Gustav and his brave friend, Emil, started to run and chased the thief.&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>tokens_df <span class="ot">=</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency =</span> T)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens_df, <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;Emil&quot;</span>), <span class="at">markup =</span> T)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs)</span></code></pre></div>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   3 obs. of  5 variables:
+##   ..$ doc_id: chr [1:3] &quot;text1&quot; &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.5&quot;: 1 1 1
+##   ..$ Entity: chr [1:3] &quot;friend&quot; &quot;friend&quot; &quot;friend&quot;
+##   ..$ action: chr [1:3] &quot;start&quot; &quot;run&quot; &quot;chase&quot;
+##   ..$ markup: chr [1:3] &quot;a_start&quot; &quot;a_run&quot; &quot;a_chase&quot;
+##  $ treatments       : chr(0) 
+##  $ characterizations:&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id          : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id          : Factor w/ 2 levels &quot;text1.1.7&quot;,&quot;text1.1.5&quot;: 1 2
+##   ..$ Entity          : chr [1:2] &quot;Emil&quot; &quot;friend&quot;
+##   ..$ characterization: chr [1:2] &quot;friend&quot; &quot;brave&quot;
+##   ..$ markup          : chr [1:2] &quot;be_friend&quot; &quot;be_brave&quot;
+##  $ possessions      : chr(0) 
+##  $ agent_treatments : chr(0) 
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  6 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.5&quot;: 1
+##   ..$ Entity : chr &quot;friend&quot;
+##   ..$ action : chr &quot;chase&quot;
+##   ..$ Patient: chr &quot;thief&quot;
+##   ..$ markup : chr &quot;aP_chase_thief&quot;</code></pre>
+<p>We can also specify multi-token core entities, provided that
+<code>parse_multi_token_entities</code> is set to <code>TRUE</code> (the
+default).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>text <span class="ot">=</span> <span class="st">&quot;Harry Potter won the tournament.&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tokens <span class="ot">=</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency=</span>T)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency=</span>T), <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;Harry Potter&quot;</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">parse_multi_token_entities =</span> T)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs)</span></code></pre></div>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.2&quot;: 1
+##   ..$ Entity: chr &quot;Potter&quot;
+##   ..$ action: chr &quot;win&quot;
+##  $ treatments       : chr(0) 
+##  $ characterizations: chr(0) 
+##  $ possessions      : chr(0) 
+##  $ agent_treatments : chr(0) 
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.3&quot;: 1
+##   ..$ Entity : chr &quot;Potter&quot;
+##   ..$ action : chr &quot;win&quot;
+##   ..$ Patient: chr &quot;tournament&quot;</code></pre>
+<p>We can pass multiple sentences or whole documents to
+<code>spacy_parse</code> and <code>extract_motifs</code> and specify
+multiple core entities. We can also vary a number of hyper-parameters
+such as whether or not auxiliary verbs should be considered as action
+motifs (<code>get_aux_verbs</code>); motif markup should be provided
+(<code>markup</code>); or whether the motifs should be provided in token
+or lemma form (<code>extract</code>). Note that the specification of
+entities is case sensitive.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>text <span class="ot">=</span> <span class="st">&quot;The plan was announced early this week by Biden. The president&#39;s speech received criticism.&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tokens <span class="ot">=</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency =</span> T)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens, <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;Biden&quot;</span>, <span class="st">&quot;president&quot;</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">parse_multi_token_entities =</span> T,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">get_aux_verbs =</span> T,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">extract =</span> <span class="st">&quot;token&quot;</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                        <span class="at">markup =</span> F)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs)</span></code></pre></div>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id: chr &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##   ..$ Entity: chr &quot;Biden&quot;
+##   ..$ action: chr &quot;announced&quot;
+##  $ treatments       : chr(0) 
+##  $ characterizations: chr(0) 
+##  $ possessions      :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id    : chr &quot;text1&quot;
+##   ..$ ann_id    : Factor w/ 1 level &quot;text1.2.2&quot;: 1
+##   ..$ Entity    : chr &quot;president&quot;
+##   ..$ Possession: chr &quot;speech&quot;
+##  $ agent_treatments : chr(0) 
+##  $ action_Patients  :&#39;data.frame&#39;:   1 obs. of  5 variables:
+##   ..$ doc_id : chr &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##   ..$ Entity : chr &quot;Biden&quot;
+##   ..$ action : chr &quot;announced&quot;
+##   ..$ Patient: chr &quot;plan&quot;</code></pre>
+<p>Finally, there may be instances in which we don’t want to extract
+motifs around specific entities but rather all kinds of motifs. This can
+be achieved by setting entities to <code>*</code>. To demonstrate this,
+we use the same sentence as before.</p>
+<p>Note that intuitively, entity-action-patient triplets and
+agent-treatment-entity triplets should be equivalent (as is the case in
+the sentence parsed here). However, certain features of the syntactic
+trees make it harder to reliably “climb backwards” in the treatment
+direction, which is why entity-action-patient extraction is slightly
+more comprehensive. If the decomposition of a text into semantic
+triplets is what you are after, it is recommended that you go with the
+entity-action-patient motifs, rather than the agent-treatment-entity
+ones.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens, <span class="at">entities =</span> <span class="st">&quot;*&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs)</span></code></pre></div>
+<pre><code>## List of 6
+##  $ actions          :&#39;data.frame&#39;:   2 obs. of  4 variables:
+##   ..$ doc_id: chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id: Factor w/ 2 levels &quot;text1.2.4&quot;,&quot;text1.1.9&quot;: 1 2
+##   ..$ Entity: chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ action: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ treatments       :&#39;data.frame&#39;:   2 obs. of  4 variables:
+##   ..$ doc_id   : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id   : Factor w/ 2 levels &quot;text1.2.6&quot;,&quot;text1.1.2&quot;: 1 2
+##   ..$ Entity   : chr [1:2] &quot;criticism&quot; &quot;plan&quot;
+##   ..$ treatment: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ characterizations: chr(0) 
+##  $ possessions      :&#39;data.frame&#39;:   1 obs. of  4 variables:
+##   ..$ doc_id    : chr &quot;text1&quot;
+##   ..$ ann_id    : Factor w/ 1 level &quot;text1.2.2&quot;: 1
+##   ..$ Entity    : chr &quot;president&quot;
+##   ..$ Possession: chr &quot;speech&quot;
+##  $ agent_treatments :&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id   : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id   : Factor w/ 2 levels &quot;text1.2.5&quot;,&quot;text1.1.4&quot;: 1 2
+##   ..$ Entity   : chr [1:2] &quot;criticism&quot; &quot;plan&quot;
+##   ..$ Agent    : chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ treatment: chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##  $ action_Patients  :&#39;data.frame&#39;:   2 obs. of  5 variables:
+##   ..$ doc_id : chr [1:2] &quot;text1&quot; &quot;text1&quot;
+##   ..$ ann_id : Factor w/ 2 levels &quot;text1.2.5&quot;,&quot;text1.1.9&quot;: 1 2
+##   ..$ Entity : chr [1:2] &quot;speech&quot; &quot;Biden&quot;
+##   ..$ action : chr [1:2] &quot;receive&quot; &quot;announce&quot;
+##   ..$ Patient: chr [1:2] &quot;criticism&quot; &quot;plan&quot;</code></pre>
+</div>
+<div id="inspect-sentences-around-motifs" class="section level2">
+<h2>Inspect sentences around motifs</h2>
+<p>It can also be useful to add the sentence in which a motif was
+contained, which can be done by setting
+<code>add_sentence = TRUE</code>. Note that the sentence text is
+generated by simply pasting together the tokens of the sentence, so that
+the representation might differ minimally from the original text.
+Nonetheless, this can be helpful for validation and for a mode of
+analyses that switches between distant and close readings of the
+text.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens, <span class="at">entities =</span> <span class="st">&quot;Biden&quot;</span>, <span class="at">add_sentence =</span> T)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs<span class="sc">$</span>action_Patients)</span></code></pre></div>
+<pre><code>## &#39;data.frame&#39;:    1 obs. of  6 variables:
+##  $ doc_id  : chr &quot;text1&quot;
+##  $ ann_id  : Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##  $ Entity  : chr &quot;Biden&quot;
+##  $ action  : chr &quot;announce&quot;
+##  $ Patient : chr &quot;plan&quot;
+##  $ sentence: chr &quot;The plan was announced early this week by Biden.&quot;</code></pre>
+</div>
+<div id="reproduce-table-2" class="section level2">
+<h2>Reproduce Table 2</h2>
+<p>Table 2 of the manuscript <a href="https://journals.sagepub.com/doi/full/10.1177/00491241221099551">‘Who
+Does What to Whom? Making Text Parsers Work for Sociological
+Inquiry’</a> showcases a set of exemplary sentences together with the
+extracted motifs for different motif classes. These sentences are mostly
+short but contain considerable syntactic variation. Here, we reproduce
+this table by passing the sentences to ‘extract_motifs’. To do this, we
+first create a dataframe with all sentences, together with the
+corresponding motif class. In order to make the text more realistic, we
+replace “ENTITY” with “Emil.” Because Patient (Agent) motifs are
+contained in the action-Patient (Agent-treatment) motifs, we only
+extract the composite motifs here which should, however, be
+equivalent.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>actions <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;a&quot;</span>,</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Emil calls.&quot;</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil can call.&quot;</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil called and asked.&quot;</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John and Emil called.&quot;</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John was called by Emil&quot;</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;My friend Emil called John.&quot;</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil wants to call.&quot;</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil wants you to call.&quot;</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>                     )</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>action_patient <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;aP&quot;</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>                            <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Emil asks John.&quot;</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Peter and Emil ask John.&quot;</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;My friend Emil asks John.&quot;</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Emil came and asked John.&quot;</span>,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Emil wants to ask John.&quot;</span>,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Emil calls John, Jane, and Steve.&quot;</span>,</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Emil asks John a question.&quot;</span>,</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;John is asked by Emil&quot;</span>,</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>                                           <span class="st">&quot;Emil made and ate a cake.&quot;</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                            )</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>treatments <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;t&quot;</span>,</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;John calls Emil.&quot;</span>,</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John gives Emil an apple.&quot;</span>,</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John gives Peter an Emil.&quot;</span>,</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John calls Peter and Emil.&quot;</span>,</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;John gave Peter an apple and Emil.&quot;</span>,</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil was called.&quot;</span>)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>                     )</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>agent_treatment <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;At&quot;</span>,</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;John asks Emil.&quot;</span>,</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;John calls Emil.&quot;</span>,</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;John gives Peter an Emil.&quot;</span>,</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;Peter and John ask Emil.&quot;</span>,</span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;Emil is asked by  John.&quot;</span>,</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;John came and asked  Emil.&quot;</span>,</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;John wants to ask Emil.&quot;</span>,</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>                                            <span class="st">&quot;My friend John asked your brother Emil.&quot;</span>)</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>                             )</span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>characterizations  <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;be&quot;</span>,</span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>                               <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Emil is kind.&quot;</span>,</span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil looks sad.&quot;</span>,</span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil is the winner.&quot;</span>,</span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil remained president.&quot;</span>,</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil could be the president.&quot;</span>,</span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil is kind and honest.&quot;</span>,</span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil won but remained sad.&quot;</span>,</span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil is going to be sad.&quot;</span>,</span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;Emil hopes to remain president.&quot;</span>,</span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;John bought a cheap, new Emil.&quot;</span>,</span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;The winner was Emil.&quot;</span>,</span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;The winners were John and Emil.&quot;</span>,</span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">&quot;My brother Emil won.&quot;</span>)</span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a>                     )</span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a>possessions <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="st">&quot;Motif class&quot;</span> <span class="ot">=</span> <span class="st">&quot;H&quot;</span>,</span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Sentence&quot;</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Emil’s spouse, friends, and parents were shocked.&quot;</span>,</span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;The breaks and wheels of the Emil were old.&quot;</span>,</span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">&quot;Emil has friends and enemies.&quot;</span>)</span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>                     )</span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">rbind</span>(actions, </span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>           action_patient,</span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>           treatments, </span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a>           agent_treatment,</span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a>           characterizations, possessions)</span></code></pre></div>
+<p>Next, we create a function that combines the task of parsing the
+sentence with <code>spacy_parse</code> and extracting motifs via
+<code>extract_motifs</code>. The function takes two inputs: the text
+from which to extract the motifs and the motif class to look for in the
+respective sentence. The core entity is specified as “Emil” for all
+sentences. Note that some of the sentences contain motifs from multiple
+classes, but here we only extract one motif class per sentence to
+reproduce Table 2 of the paper. We also specify that auxiliary verbs
+should be considered as actions (<code>get_aux_verbs = T</code>) to
+match the extractions in the paper.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>annotate_and_extract <span class="ot">=</span> <span class="cf">function</span>(text, motif_class){</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Parse the sentence</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  tokens <span class="ot">=</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency =</span> T)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract the respective motif</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> <span class="fu">spacy_parse</span>(text, <span class="at">dependency =</span> T), </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                          <span class="at">entities =</span> <span class="st">&quot;Emil&quot;</span>, <span class="at">motif_classes =</span> motif_class,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">aux_verb_markup =</span> T, <span class="at">verbose =</span> F, <span class="at">markup =</span> T,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">get_aux_verbs =</span> T)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>(motifs[[<span class="fu">which.max</span>(<span class="fu">lengths</span>(motifs))]]<span class="sc">$</span>markup)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Finally, we pass the sentences and corresponding motif class to
+<code>mapply</code> to extract motifs for each sentence. The extraction
+results should be identical with those shown in Table 2 of the
+paper.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>Extract <span class="ot">=</span> <span class="fu">mapply</span>(<span class="cf">function</span>(X,Y) {<span class="fu">annotate_and_extract</span>(<span class="at">text =</span> X, <span class="at">motif_class =</span> Y)},</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">X =</span> df<span class="sc">$</span>Sentence, <span class="at">Y =</span> df<span class="sc">$</span>Motif.class)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(df)</span></code></pre></div>
+<table>
+<colgroup>
+<col width="11%" />
+<col width="47%" />
+<col width="41%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Motif.class</th>
+<th align="left">Sentence</th>
+<th align="left">Extract</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">a</td>
+<td align="left">Emil calls.</td>
+<td align="left">a_call</td>
+</tr>
+<tr class="even">
+<td align="left">a</td>
+<td align="left">Emil can call.</td>
+<td align="left">a_can , a_call</td>
+</tr>
+<tr class="odd">
+<td align="left">a</td>
+<td align="left">Emil called and asked.</td>
+<td align="left">a_call, a_ask</td>
+</tr>
+<tr class="even">
+<td align="left">a</td>
+<td align="left">John and Emil called.</td>
+<td align="left">a_call</td>
+</tr>
+<tr class="odd">
+<td align="left">a</td>
+<td align="left">John was called by Emil</td>
+<td align="left">a_call</td>
+</tr>
+<tr class="even">
+<td align="left">a</td>
+<td align="left">My friend Emil called John.</td>
+<td align="left">a_call</td>
+</tr>
+<tr class="odd">
+<td align="left">a</td>
+<td align="left">Emil wants to call.</td>
+<td align="left">a_want, a_call</td>
+</tr>
+<tr class="even">
+<td align="left">a</td>
+<td align="left">Emil wants you to call.</td>
+<td align="left">a_want</td>
+</tr>
+<tr class="odd">
+<td align="left">aP</td>
+<td align="left">Emil asks John.</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="even">
+<td align="left">aP</td>
+<td align="left">Peter and Emil ask John.</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="odd">
+<td align="left">aP</td>
+<td align="left">My friend Emil asks John.</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="even">
+<td align="left">aP</td>
+<td align="left">Emil came and asked John.</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="odd">
+<td align="left">aP</td>
+<td align="left">Emil wants to ask John.</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="even">
+<td align="left">aP</td>
+<td align="left">Emil calls John, Jane, and Steve.</td>
+<td align="left">aP_call_John , aP_call_Jane , aP_call_Steve</td>
+</tr>
+<tr class="odd">
+<td align="left">aP</td>
+<td align="left">Emil asks John a question.</td>
+<td align="left">aP_ask_John , aP_ask_question</td>
+</tr>
+<tr class="even">
+<td align="left">aP</td>
+<td align="left">John is asked by Emil</td>
+<td align="left">aP_ask_John</td>
+</tr>
+<tr class="odd">
+<td align="left">aP</td>
+<td align="left">Emil made and ate a cake.</td>
+<td align="left">aP_eat_cake</td>
+</tr>
+<tr class="even">
+<td align="left">t</td>
+<td align="left">John calls Emil.</td>
+<td align="left">t_call</td>
+</tr>
+<tr class="odd">
+<td align="left">t</td>
+<td align="left">John gives Emil an apple.</td>
+<td align="left">t_give</td>
+</tr>
+<tr class="even">
+<td align="left">t</td>
+<td align="left">John gives Peter an Emil.</td>
+<td align="left">t_give</td>
+</tr>
+<tr class="odd">
+<td align="left">t</td>
+<td align="left">John calls Peter and Emil.</td>
+<td align="left">t_call</td>
+</tr>
+<tr class="even">
+<td align="left">t</td>
+<td align="left">John gave Peter an apple and Emil.</td>
+<td align="left">t_give</td>
+</tr>
+<tr class="odd">
+<td align="left">t</td>
+<td align="left">Emil was called.</td>
+<td align="left">t_call</td>
+</tr>
+<tr class="even">
+<td align="left">At</td>
+<td align="left">John asks Emil.</td>
+<td align="left">At_John_ask</td>
+</tr>
+<tr class="odd">
+<td align="left">At</td>
+<td align="left">John calls Emil.</td>
+<td align="left">At_John_call</td>
+</tr>
+<tr class="even">
+<td align="left">At</td>
+<td align="left">John gives Peter an Emil.</td>
+<td align="left">At_John_give</td>
+</tr>
+<tr class="odd">
+<td align="left">At</td>
+<td align="left">Peter and John ask Emil.</td>
+<td align="left">At_Peter_ask, At_John_ask</td>
+</tr>
+<tr class="even">
+<td align="left">At</td>
+<td align="left">Emil is asked by John.</td>
+<td align="left">At_John_ask</td>
+</tr>
+<tr class="odd">
+<td align="left">At</td>
+<td align="left">John came and asked Emil.</td>
+<td align="left">At_John_ask</td>
+</tr>
+<tr class="even">
+<td align="left">At</td>
+<td align="left">John wants to ask Emil.</td>
+<td align="left">At_John_ask</td>
+</tr>
+<tr class="odd">
+<td align="left">At</td>
+<td align="left">My friend John asked your brother Emil.</td>
+<td align="left">At_friend_ask, At_John_ask</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">Emil is kind.</td>
+<td align="left">be_kind</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">Emil looks sad.</td>
+<td align="left">be_sad</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">Emil is the winner.</td>
+<td align="left">be_winner</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">Emil remained president.</td>
+<td align="left">be_president</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">Emil could be the president.</td>
+<td align="left">be_president</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">Emil is kind and honest.</td>
+<td align="left">be_kind , be_honest</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">Emil won but remained sad.</td>
+<td align="left">be_sad</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">Emil is going to be sad.</td>
+<td align="left">be_sad</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">Emil hopes to remain president.</td>
+<td align="left">be_president</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">John bought a cheap, new Emil.</td>
+<td align="left">be_cheap, be_new</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">The winner was Emil.</td>
+<td align="left">be_winner</td>
+</tr>
+<tr class="odd">
+<td align="left">be</td>
+<td align="left">The winners were John and Emil.</td>
+<td align="left">be_winner</td>
+</tr>
+<tr class="even">
+<td align="left">be</td>
+<td align="left">My brother Emil won.</td>
+<td align="left">be_brother</td>
+</tr>
+<tr class="odd">
+<td align="left">H</td>
+<td align="left">Emil’s spouse, friends, and parents were shocked.</td>
+<td align="left">H_spouse, H_friend, H_parent</td>
+</tr>
+<tr class="even">
+<td align="left">H</td>
+<td align="left">The breaks and wheels of the Emil were old.</td>
+<td align="left">H_break, H_wheel</td>
+</tr>
+<tr class="odd">
+<td align="left">H</td>
+<td align="left">Emil has friends and enemies.</td>
+<td align="left">H_friend, H_enemy</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="fast-motif-extraction" class="section level2">
+<h2>Fast motif extraction</h2>
+<p>The extraction rules in <code>semgram</code> aim for
+comprehensiveness, so that motifs are correctly identified even in
+syntactically complex sentences like those shown above. However, the
+majority of extracted motifs are extracted by rather simple rules.
+<code>extract_motifs</code> offers an option for speeding up the
+extraction process which can be accessed by setting
+<code>fast = TRUE</code>. In fast mode, we drop a few of the extraction
+rules written for very specific syntactic patterns. By doing so, we miss
+some of the motifs we could have extracted but we do this for the
+advantage of considerably decreased run time.</p>
+<p>To demonstrate this, we will first download a book using the
+<code>gutenbergr</code> library, which provides quick access to the
+works collected by <a href="https://www.gutenberg.org">Project
+Gutenberg</a>. Specifically, we access Balzac’s short story “Sarrasine”
+- you may choose another work, of course. We collapse the book into a
+long string and pass it through the <code>spacyr</code> annotation
+pipeline. Note that sometimes, the gutenberg server is down and you
+might have to select a different mirror, a list of which can be found <a href="https://www.gutenberg.org/MIRRORS.ALL">here</a>.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gutenbergr)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>sarrasine <span class="ot">&lt;-</span> gutenbergr<span class="sc">::</span><span class="fu">gutenberg_download</span>(<span class="dv">1826</span>, <span class="at">mirror =</span> <span class="st">&quot;https://gutenberg.pglaf.org/&quot;</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>sarrasine_text <span class="ot">=</span> <span class="fu">paste0</span>(sarrasine<span class="sc">$</span>text, <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>tokens_df <span class="ot">=</span> <span class="fu">spacy_parse</span>(sarrasine_text, <span class="at">dependency=</span>T)</span></code></pre></div>
+<p>For demo purposes, we simply extract all motifs around any entity. We
+do this once in the normal extraction mode and once in fast extraction
+mode.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>time <span class="ot">=</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(tokens_df, </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;*&quot;</span>),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pron_as_ap =</span> T)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>time_gap <span class="ot">=</span> <span class="fu">Sys.time</span>()<span class="sc">-</span>time</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>time <span class="ot">=</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>motifs_fast <span class="ot">=</span> <span class="fu">extract_motifs</span>(tokens_df, </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                             <span class="at">entities =</span> <span class="fu">c</span>(<span class="st">&quot;*&quot;</span>),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>                             <span class="at">pron_as_ap =</span> T,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>                             <span class="at">fast =</span> T)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>time_gap_fast <span class="ot">=</span> <span class="fu">Sys.time</span>()<span class="sc">-</span>time</span></code></pre></div>
+<p>As you can see, the fast mode considerably cuts the run time.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Time normal mode:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>time_gap</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Time fast mode:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>time_gap_fast</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Time saved:&quot;</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">as.numeric</span>(time_gap_fast, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>)<span class="sc">/</span><span class="fu">as.numeric</span>(time_gap, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>),<span class="dv">2</span>)<span class="sc">*</span><span class="dv">100</span>,<span class="st">&quot;%&quot;</span>)</span></code></pre></div>
+<pre><code>## Time normal mode:
+## Time difference of 8.482124 secs
+## 
+## Time fast mode:
+## Time difference of 2.086058 secs
+## 
+## Time saved: 75 %</code></pre>
+<p>Finally, we compare the number of extracted motifs in the two modes.
+In the fast mode we are still able to extract most motifs we had
+discovered in the normal mode. Some motif classes are more heavily
+affected than others in terms of declining extraction performance.
+Performance decline is likely to also depend on the syntactic complexity
+of the text. While the fast mode is not recommended for a serious
+analysis, it can be helpful for preliminary inspection of data, or if
+you lack computing power.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>n_slow <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(motifs, <span class="cf">function</span>(x) <span class="fu">nrow</span>(x))))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>n_fast <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(motifs_fast, <span class="cf">function</span>(x) <span class="fu">nrow</span>(x))))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total motifs in normal mode:&quot;</span>, n_slow, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total motifs in fast mode:&quot;</span>, n_fast, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Percentage of motifs extracted in fast mode: &quot;</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(n_fast<span class="sc">/</span>n_slow,<span class="dv">4</span>)<span class="sc">*</span><span class="dv">100</span>,<span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;Percentage of motifs extracted in fast mode by category:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(motifs_fast, <span class="cf">function</span>(x) <span class="fu">nrow</span>(x)))<span class="sc">/</span><span class="fu">unlist</span>(<span class="fu">lapply</span>(motifs, <span class="cf">function</span>(x) <span class="fu">nrow</span>(x))),<span class="dv">3</span>)<span class="sc">*</span><span class="dv">100</span></span></code></pre></div>
+<pre><code>## Total motifs in normal mode: 5279 
+## Total motifs in fast mode: 4346 
+## Percentage of motifs extracted in fast mode:  82.33 
+## 
+## [1] &quot;Percentage of motifs extracted in fast mode by category:\n&quot;
+##           actions        treatments characterizations       possessions 
+##              85.7              89.2              98.5              56.8 
+##  agent_treatments   action_Patients 
+##              80.6              79.9</code></pre>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
