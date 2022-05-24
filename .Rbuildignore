@@ -1,6 +1,4 @@
 ^.*\.Rproj$
-^.*\.Rmd$
-^.*\.html$
 ^\.Rproj\.user$
 ^semgram\.R$
 ^cran-comments\.md$

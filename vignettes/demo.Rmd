@@ -1,5 +1,10 @@
 ---
-title: 'semgram: a brief demo'
+title: "semgram: a brief demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -225,7 +230,7 @@ To demonstrate this, we will first download a book using the `gutenbergr` librar
 
 ```{r 11, message=FALSE}
 library(gutenbergr)
-sarrasine <- gutenberg_download(1826, mirror = "https://gutenberg.pglaf.org/")
+sarrasine <- gutenbergr::gutenberg_download(1826, mirror = "https://gutenberg.pglaf.org/")
 sarrasine_text = paste0(sarrasine$text, collapse = " ")
 tokens_df = spacy_parse(sarrasine_text, dependency=T)
 ```
@@ -275,8 +280,4 @@ cat("Percentage of motifs extracted in fast mode: ",
 print("Percentage of motifs extracted in fast mode by category:\n")
 round(unlist(lapply(motifs_fast, function(x) nrow(x)))/unlist(lapply(motifs, function(x) nrow(x))),3)*100
 ```
-
-
-
-
 
