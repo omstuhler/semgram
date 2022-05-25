@@ -483,8 +483,9 @@ head token. “chase” is the root of the sentence and points to itself.
 </tr>
 </tbody>
 </table>
-<div id="extract-semantic-motifs" class="section level2">
-<h2>Extract semantic motifs</h2>
+</div>
+<div id="extract-semantic-motifs" class="section level1">
+<h1>Extract semantic motifs</h1>
 <p>The annotated tokens dataframe can now be passed to
 <code>semgram</code>’s <code>extract_motifs</code>. When doing so, we
 also need to specify which core entities we would like to extract motifs
@@ -656,8 +657,8 @@ ones.</p>
 ##   ..$ action : chr [1:2] &quot;receive&quot; &quot;announce&quot;
 ##   ..$ Patient: chr [1:2] &quot;criticism&quot; &quot;plan&quot;</code></pre>
 </div>
-<div id="inspect-sentences-around-motifs" class="section level2">
-<h2>Inspect sentences around motifs</h2>
+<div id="inspect-sentences-around-motifs" class="section level1">
+<h1>Inspect sentences around motifs</h1>
 <p>It can also be useful to add the sentence in which a motif was
 contained, which can be done by setting
 <code>add_sentence = TRUE</code>. Note that the sentence text is
@@ -676,8 +677,8 @@ text.</p>
 ##  $ Patient : chr &quot;plan&quot;
 ##  $ sentence: chr &quot;The plan was announced early this week by Biden.&quot;</code></pre>
 </div>
-<div id="reproduce-table-2" class="section level2">
-<h2>Reproduce Table 2</h2>
+<div id="reproduce-table-2" class="section level1">
+<h1>Reproduce Table 2</h1>
 <p>Table 2 of the manuscript <a href="https://journals.sagepub.com/doi/full/10.1177/00491241221099551">‘Who
 Does What to Whom? Making Text Parsers Work for Sociological
 Inquiry’</a> showcases a set of exemplary sentences together with the
@@ -1043,8 +1044,8 @@ paper.</p>
 </tbody>
 </table>
 </div>
-<div id="fast-motif-extraction" class="section level2">
-<h2>Fast motif extraction</h2>
+<div id="fast-motif-extraction" class="section level1">
+<h1>Fast motif extraction</h1>
 <p>The extraction rules in <code>semgram</code> aim for
 comprehensiveness, so that motifs are correctly identified even in
 syntactically complex sentences like those shown above. However, the
@@ -1091,12 +1092,12 @@ mode.</p>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Time saved:&quot;</span>,</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">as.numeric</span>(time_gap_fast, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>)<span class="sc">/</span><span class="fu">as.numeric</span>(time_gap, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>),<span class="dv">2</span>)<span class="sc">*</span><span class="dv">100</span>,<span class="st">&quot;%&quot;</span>)</span></code></pre></div>
 <pre><code>## Time normal mode:
-## Time difference of 8.482124 secs
+## Time difference of 7.957103 secs
 ## 
 ## Time fast mode:
-## Time difference of 2.086058 secs
+## Time difference of 2.166888 secs
 ## 
-## Time saved: 75 %</code></pre>
+## Time saved: 73 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes.
 In the fast mode we are still able to extract most motifs we had
 discovered in the normal mode. Some motif classes are more heavily
@@ -1125,7 +1126,6 @@ you lack computing power.</p>
 ##              85.7              89.2              98.5              56.8 
 ##  agent_treatments   action_Patients 
 ##              80.6              79.9</code></pre>
-</div>
 </div>
 
 
