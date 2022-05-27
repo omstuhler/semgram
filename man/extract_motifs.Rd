@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract_motifs.R
 \name{extract_motifs}
 \alias{extract_motifs}
-\title{Extraction function}
+\title{Extract semantic motifs from parsed text object}
 \usage{
 extract_motifs(
   tokens,
@@ -38,9 +38,9 @@ By default, all motif classes are considered. Note, however, that run time incre
 
 \item{fast}{If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
 
-\item{parse_multi_token_entities}{Should we multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE.}
+\item{parse_multi_token_entities}{Should multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE.}
 
-\item{extract}{Parameter defines whether we extract the "lemma" or the "token" of a motif. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.}
+\item{extract}{Parameter defines whether extracted motifs are represented in "lemma" or "token" form. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.}
 
 \item{markup}{If TRUE, motifs will also be provided as collapsed markup tokens, e.g. "aP_ask_Harry". Defaults to FALSE.}
 
@@ -49,7 +49,7 @@ By default, all motif classes are considered. Note, however, that run time incre
 \item{be_entity}{Should things that are linked to an entity via "being" (or one of it's lemmas) be considered as characterization motifs?
 For example, say we are extracting characterization motifs around the entity "immigrants" in the sentence "my parents are immigrants", should we extract the characterization motif "be_parent"? Defaults to TRUE.}
 
-\item{get_aux_verbs}{Should auxiliary verbs (e.g. can, could, may, must, etc.) be collected as actions? Defaults to FALSE.}
+\item{get_aux_verbs}{Should auxiliary verbs (e.g. can, could, may, must) be considered a actions? Defaults to FALSE.}
 
 \item{aux_verb_markup}{Should auxiliary verbs with "to" be marked up so that "going" in "going to eat" becomes "going-to".
 Note that this will not affect cases of the sort "going to the bar." This can be especially useful for analyses concerning modality.
@@ -57,7 +57,7 @@ The parameter defaults to TRUE.}
 
 \item{pron_as_ap}{Should pronouns be considered as agents and patients? Defaults to FALSE.}
 
-\item{use_appos}{Should things linked to an entity via an appositional modifier be considered as equivalent to the entity.
+\item{use_appos}{Should things linked to an entity via an appositional modifier be considered as equivalent to the entity?
 For example, if we specify our entity to be "Peter" in the sentence "My brother Peter left.", should "brother" be considered equivalent to "Peter"?
 Only if use_appos = TRUE, we can extract "leaving" as action motif associated with Peter, as the subject associated with "leaving" is "brother".}
 
@@ -66,8 +66,22 @@ Only if use_appos = TRUE, we can extract "leaving" as action motif associated wi
 \item{verbose}{Defaults to FALSE.}
 }
 \value{
-A list with six dataframes, one for each motif class. List element of motif classes not specified in the motif_classes parameter will be empty.
+A list with six dataframes, one for each motif class. List elements of motif classes not specified in the motif_classes parameter will be empty.
 }
 \description{
-This function extracts motifs from text.
+This function extracts semantic motifs from text. The input is a data.frame representing a parsed text such as those returned by spacyr::spacy_parse().
+The output is a list of data.frames containing semantic motifs such as actions or characterizations of textual entities. For a detailed explanation, see Stuhler (2022).
+}
+\examples{
+# Parse a text with spacyr
+tokens_df = spacyr::spacy_parse("Emil chased the thief.", dependency = TRUE, entity = FALSE)
+
+# Extract motifs around specific entities, here "Emil"
+extract_motifs(tokens = tokens_df, entities = c("Emil"))
+
+# Extract all possible motifs
+extract_motifs(tokens = tokens_df, entities = "*")
+}
+\references{
+Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry" Sociological Methods and Research. DOI: 10.1177/00491241221099551.
 }
