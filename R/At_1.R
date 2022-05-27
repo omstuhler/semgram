@@ -1,4 +1,4 @@
-#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery 
+#' @importFrom rsyntax annotate_tqueries cast_text children NOT OR not_children parents tquery
 NULL
 
 ###############################################################################################
@@ -19,9 +19,9 @@ At_1 = function(tokens, entities, verb_pos, agent_patient_pos, extract){
                         )
                 )
   )
-  
-  tokens = tokens %>% annotate_tqueries("query", rule, overwrite = T, copy = F)
-  
+
+  tokens = annotate_tqueries(tokens, "query", rule, overwrite = T, copy = F)
+
   if(all(is.na(tokens$query))){
     casted = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
   } else {

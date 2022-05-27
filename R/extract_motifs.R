@@ -1,5 +1,4 @@
 #' @importFrom stringr str_c str_detect str_split str_extract
-#' @importFrom dplyr left_join %>%
 #' @importFrom data.table data.table
 #' @importFrom rsyntax annotate_tqueries NOT parents tquery
 NULL
@@ -37,7 +36,7 @@ NULL
 #' @param verbose Defaults to FALSE.
 #' @return A list with six dataframes, one for each motif class. List elements of motif classes not specified in the motif_classes parameter will be empty.
 #' @export
-#' @references Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry" Sociological Methods and Research. DOI: 10.1177/00491241221099551.
+#' @references Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry." Sociological Methods and Research. <doi: 10.1177/00491241221099551>.
 #' @examples
 #' # Parse a text with spacyr
 #' tokens_df = spacyr::spacy_parse("Emil chased the thief.", dependency = TRUE, entity = FALSE)
@@ -64,7 +63,6 @@ extract_motifs = function(tokens,
                           use_appos = T,
                           lowercase = F,
                           verbose = F){
-
 
   ###############################################################################################
   #####################################Pre-processing############################################
@@ -149,11 +147,8 @@ extract_motifs = function(tokens,
 
     # Merge in the phrase replacements
     if(exists("phrase_df") & nrow(phrase_df) > 0){
-      tokens = left_join(tokens, phrase_df[,c("doc_id", "sentence", "token_id", "phrase_replacement")],
-                         by = c("doc_id" = "doc_id",
-                                "sentence" = "sentence",
-                                "token_id" = "token_id"),
-                         keep = F)
+      tokens = merge(tokens, phrase_df[,c("doc_id", "sentence", "token_id", "phrase_replacement")],
+                     by = c("doc_id", "sentence", "token_id"), all.x = T)
 
       tokens$token = ifelse(!is.na(tokens$phrase_replacement), tokens$phrase_replacement, tokens$token)
       #tokens = unique(tokens)
@@ -239,11 +234,9 @@ extract_motifs = function(tokens,
 
     # Merge in the phrase replacements
     if(exists("aux_phrase_df") & nrow(aux_phrase_df) > 0){
-      tokens = left_join(tokens, aux_phrase_df[,c("doc_id", "sentence", "token_id", "aux_phrase_replacement")],
-                         by = c("doc_id" = "doc_id",
-                                "sentence" = "sentence",
-                                "token_id" = "token_id"),
-                         keep = F)
+      tokens = merge(tokens, aux_phrase_df[,c("doc_id", "sentence", "token_id", "aux_phrase_replacement")],
+                     by = c("doc_id", "sentence", "token_id"), all.x = T)
+
 
       tokens$token = ifelse(!is.na(tokens$aux_phrase_replacement), tokens$aux_phrase_replacement, tokens$token)
       tokens$lemma = ifelse(!is.na(tokens$aux_phrase_replacement), tokens$aux_phrase_replacement, tokens$lemma)

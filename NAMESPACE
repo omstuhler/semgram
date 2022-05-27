@@ -2,8 +2,6 @@
 
 export(extract_motifs)
 importFrom(data.table,data.table)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,left_join)
 importFrom(rsyntax,NOT)
 importFrom(rsyntax,OR)
 importFrom(rsyntax,annotate_tqueries)

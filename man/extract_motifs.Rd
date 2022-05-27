@@ -84,5 +84,5 @@ extract_motifs(tokens = tokens_df, entities = c("Emil"))
 extract_motifs(tokens = tokens_df, entities = "*")
 }
 \references{
-Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry" Sociological Methods and Research. DOI: 10.1177/00491241221099551.
+Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry." Sociological Methods and Research. <doi: 10.1177/00491241221099551>.
 }
