@@ -3,7 +3,11 @@ Package: semgram
 Title: semgram: R package for extracting semantic motifs from text
 Version: 1.0.0
 Authors@R: 
-	person("Oscar", "Stuhler", email = "semgram.r@gmail.com", role = c("aut", "cre"))
+	person(given = "Oscar", 
+			family = "Stuhler", 
+            email = "semgram.r@gmail.com", 
+            role = c("aut", "cre"),
+            comment = c(ORCID = "0000-0001-7391-1743"))
 Description: semgram extracts semantic motifs from textual data. It builds on an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity.
 Depends: 
 	R (>= 3.5.3)
@@ -11,7 +15,6 @@ Imports:
     data.table,
 	dplyr,
 	rsyntax (>= 0.1.2),
-	spacyr,
 	stringr
 License: GPL-3
 Encoding: UTF-8
@@ -22,8 +25,9 @@ Author:
 Maintainer: 
 	Oscar Stuhler <semgram.r@gmail.com>
 Suggests: 
+    devtools,
     gutenbergr,
-    rmarkdown,
     knitr,
-    devtools
+    rmarkdown,
+    spacyr
 VignetteBuilder: knitr

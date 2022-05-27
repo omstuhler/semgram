@@ -28,7 +28,7 @@ extract_motifs(
 
 \item{entities}{Specifies the core entities around which to extract motifs. This can be a single character string or a vector of character strings.
 Multi-token strings such as "Harry Potter" will be parsed if parse_multi_token_entities is set to TRUE. Note that this parameter is case-sensitive.
-entities defaults to "*" in which case any token is treated as a potential entity.}
+It defaults to "*" in which case any token is treated as a potential entity.}
 
 \item{motif_classes}{A character vector specifying which motif classes should be considered in the extraction.
 This can include "t" for treatments, "a" for actions, "be" for characterizations, "H" for possessions, as well as "At" and "aP" for agent-treatment and action-patient motifs respectively.
@@ -38,7 +38,8 @@ By default, all motif classes are considered. Note, however, that run time incre
 
 \item{fast}{If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
 
-\item{parse_multi_token_entities}{Should multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE.}
+\item{parse_multi_token_entities}{Should multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE. When using multi-token entities, it is crucial that tokens are separated by a space character. Make sure that your input matches the tokenized version in your tokens object.
+For instance, hyphens are usually considered a token in tokenization, so that "Claude Lévi-Strauss" should be passed to entities as "Claude Lévi - Strauss".}
 
 \item{extract}{Parameter defines whether extracted motifs are represented in "lemma" or "token" form. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.}
 
