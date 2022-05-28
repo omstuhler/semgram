@@ -1,6 +1,6 @@
 Type: Package
 Package: semgram
-Title: Extracting semantic motifs from text
+Title: Extracting Semantic Motifs from Textual Data
 Version: 0.1.0
 Authors@R: 
 	person(given = "Oscar", 
