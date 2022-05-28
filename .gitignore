@@ -1,4 +1,5 @@
 .DS_Store
 .Rhistory
 .Rproj.user
+.Rproj
 inst/doc

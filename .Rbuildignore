@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^semgram\.R$
 ^cran-comments\.md$
+vignettes
+demo\.html
+demo\.Rmd

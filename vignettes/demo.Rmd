@@ -25,7 +25,7 @@ Finally, `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.
 library(devtools)
 library(spacyr)
 
-# Installing semgram
+# Installing development version of semgram
 devtools::install_github("omstuhler/semgram")
 library(semgram)
 ```

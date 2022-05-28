@@ -1,7 +1,7 @@
 Type: Package
 Package: semgram
 Title: Extracting semantic motifs from text
-Version: 1.0.0
+Version: 0.1.0
 Authors@R: 
 	person(given = "Oscar", 
 			family = "Stuhler", 
@@ -21,13 +21,6 @@ Imports:
     data.table,
 	rsyntax (>= 0.1.2),
 	stringr
-Suggests: 
-    devtools,
-    gutenbergr,
-    knitr,
-    rmarkdown,
-    spacyr
-VignetteBuilder: knitr
 Author: 
 	Oscar Stuhler [aut, cre]
 Maintainer: 
