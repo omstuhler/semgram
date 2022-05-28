@@ -150,7 +150,7 @@ extract_motifs = function(tokens,
       tokens = merge(tokens, phrase_df[,c("doc_id", "sentence", "token_id", "phrase_replacement")],
                      by = c("doc_id", "sentence", "token_id"), all.x = T)
       tokens$token = ifelse(!is.na(tokens$phrase_replacement), tokens$phrase_replacement, tokens$token)
-      tokens$lemma = ifelse(!is.na(tokens$phrase_replacement), tokens$phrase_replacement, tokens$lemme)
+      tokens$lemma = ifelse(!is.na(tokens$phrase_replacement), tokens$phrase_replacement, tokens$lemma)
     } else {
       tokens$phrase_replacement = NA
     }
