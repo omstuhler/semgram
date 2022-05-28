@@ -6,7 +6,7 @@
 
 If you use `semgram` in your research, please cite as follows:
 
-> Stuhler, Oscar (2022). "Who does What to Whom? Making Text Parsers Work for Sociological Inquiry." *Sociological Methods & Research*. doi: 10.1177/00491241221099551
+> Stuhler, Oscar (2022). "Who does What to Whom? Making Text Parsers Work for Sociological Inquiry." *Sociological Methods & Research*. doi: 10.1177/00491241221099551.
 
 ## Installation
 
@@ -22,7 +22,7 @@ The first step in extracting semantinc motifs from text is to pass it through an
 
 ```R
 text = "Emil chased the thief."
-tokens_df = spacyr::spacy_parse(text, dependency=T, entity = F)
+tokens_df = spacyr::spacy_parse(text, dependency=T)
 tokens_df
 
 #>   doc_id sentence_id token_id  token lemma   pos head_token_id dep_rel
@@ -34,17 +34,17 @@ tokens_df
 
 ```
 
-The working horse of `semgram` is the `extract_motifs` function to which we pass an annotated tokens object. We also have to specify in which entity we are interested (here "Emil"). By default, `extract_motifs` extracts motifs for all motif classes. 
+The working horse of `semgram` is the `extract_motifs` function to which we pass an annotated tokens object. We can also specify in which entity we are interested (here "Emil"). By default, `extract_motifs` extracts motifs for all motif classes (actions, patients, treatments, etc.).
 
 In the example sentence, we find an action motif (a_chase) and well as a composite action-Patient motif (aP_chase_thief). For some more functionalities, check out the [demo](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/vignettes/demo.html).
 
 ```R
-extract_motifs(tokens = tokens_df, entities = c("Emil"))
+extract_motifs(tokens = tokens_df, entities = c("Emil"), markup = T)
 
 #> List of 8
 #>  $actions   			
-#>	doc_id	ann_id		Entity	action
-#>	text1	text1.1.1  	Emil  	chase
+#>	doc_id	ann_id		Entity	action  markup
+#>	text1	text1.1.1  	Emil  	chase   a_chase
 #>  $treatments
 #>	character(0)
 #>  $characterizations
@@ -54,6 +54,6 @@ extract_motifs(tokens = tokens_df, entities = c("Emil"))
 #>  $agent_treatments
 #>	character(0)
 #>  $action_Patients	
-#>	doc_id	ann_id		Entity	action 	Patient
-#>	text1 	text1.1.2	Emil  	chase   thief
+#>	doc_id	ann_id		Entity	action 	Patient markup
+#>	text1 	text1.1.2	Emil  	chase   thief   aP_chase_thief
 ```
