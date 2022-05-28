@@ -38,8 +38,16 @@ NULL
 #' @export
 #' @references Stuhler, Oscar (2022) "Who Does What To Whom? Making Text Parsers Work for Sociological Inquiry." Sociological Methods and Research. <doi: 10.1177/00491241221099551>.
 #' @examples
-#' # Parse a text with spacyr
-#' tokens_df = spacyr::spacy_parse("Emil chased the thief.", dependency = TRUE, entity = FALSE)
+#' # Given data.frame with parsed sentence – as can be generated with spacyr::spacy_parse().
+#' tokens_df = data.frame(doc_id = rep("text1", 4),
+#'                        sentence_id = rep(1, 4),
+#'                        token_id = 1:4,
+#'                        token = c("Emil", "chased", "the", "thief"),
+#'                        lemma = c("Emil", "chase", "the", "thief"),
+#'                        pos = c("PROPN", "VERB", "DET", "NOUN"),
+#'                        head_token_id = c(2,2,4,2),
+#'                        dep_rel = c("nsubj", "ROOT", "det", "dobj")
+#'                        )
 #'
 #' # Extract motifs around specific entities, here "Emil"
 #' extract_motifs(tokens = tokens_df, entities = c("Emil"))
