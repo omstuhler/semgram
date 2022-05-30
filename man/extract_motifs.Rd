@@ -39,7 +39,7 @@ By default, all motif classes are considered. Note, however, that run time incre
 \item{fast}{If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
 
 \item{parse_multi_token_entities}{Should multi-token entities (e.g. "Harry Potter') be considered. Defaults to TRUE. When using multi-token entities, it is crucial that tokens are separated by a space character. Make sure that your input matches the tokenized version in your tokens object.
-For instance, hyphens are usually considered a token in tokenization, so that "Claude Lévi-Strauss" should be passed to entities as "Claude Lévi - Strauss".}
+For instance, hyphens are usually considered a token in tokenization, so that "Claude Levi-Strauss" should be passed to entities as "Claude Levi - Strauss".}
 
 \item{extract}{Parameter defines whether extracted motifs are represented in "lemma" or "token" form. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.}
 

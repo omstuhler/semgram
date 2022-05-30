@@ -937,7 +937,7 @@ extract_motifs = function(tokens,
                     "characterizations" = characterizations,
                     "possessions" = possessions,
                     "agent_treatments" = agent_treatments,
-                    "action_Patients" = action_Patients)
+                    "action_patients" = action_Patients)
 
 
   ###############################################################################################

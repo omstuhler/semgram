@@ -1092,12 +1092,12 @@ mode.</p>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Time saved:&quot;</span>,</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">as.numeric</span>(time_gap_fast, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>)<span class="sc">/</span><span class="fu">as.numeric</span>(time_gap, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>),<span class="dv">2</span>)<span class="sc">*</span><span class="dv">100</span>,<span class="st">&quot;%&quot;</span>)</span></code></pre></div>
 <pre><code>## Time normal mode:
-## Time difference of 7.277717 secs
+## Time difference of 7.093012 secs
 ## 
 ## Time fast mode:
-## Time difference of 1.794939 secs
+## Time difference of 1.85054 secs
 ## 
-## Time saved: 75 %</code></pre>
+## Time saved: 74 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes.
 In the fast mode we are still able to extract most motifs we had
 discovered in the normal mode. Some motif classes are more heavily
