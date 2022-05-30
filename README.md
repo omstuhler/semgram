@@ -18,7 +18,7 @@ devtools::install_github("omstuhler/semgram")
 
 ## Example
 
-The first step in extracting semantinc motifs from text is to pass it through an annotation pipeline. You can do this by running `spacyr::spacy_parse()`.
+The first step in extracting semantic motifs from text is to pass it through an annotation pipeline. You can do this by running `spacyr::spacy_parse()`.
 
 ```R
 text = "Emil chased the thief."

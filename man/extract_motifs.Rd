@@ -116,7 +116,7 @@ Characterizations are characteristics ascribed to the entity of interest. There
 are several ways in which this can happen. The most common one is via a
 copular verb, that has either an adjectival ("ENTITY is kind." - be_kind; "ENTITY looks sad." - 
 be_sad; "ENTITY is kind
-and honest." - be_kind, be_hinest) or nominal ("ENTITY is the winner." - be_winner; "ENTITY 
+and honest." - be_kind, be_honest) or nominal ("ENTITY is the winner." - be_winner; "ENTITY 
 hopes to remain president." - be_president) attribute dependent. However, adjectives can also 
 be direct dependents of the entity ("John bought a cheap, new ENTITY." - be_cheap, be_new) to 
 be considered characterizations. Furthermore, nominal subjects of copular verbs with the 
