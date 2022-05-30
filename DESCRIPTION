@@ -22,7 +22,7 @@ Imports:
 	rsyntax (>= 0.1.2),
 	stringr
 Author: 
-	Oscar Stuhler [aut, cre]
+	Oscar Stuhler [aut, cre]  (<https://orcid.org/0000-0001-7391-1743>)
 Maintainer: 
 	Oscar Stuhler <semgram.r@gmail.com>
 
