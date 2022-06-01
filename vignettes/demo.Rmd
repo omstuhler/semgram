@@ -17,22 +17,16 @@ This is a demo of the `semgram` package. For a detailed account of the method, p
 
 For this demo, we will need [`spacyr`](https://github.com/quanteda/spacyr), a wrapper around the popular spaCy Python library. `spacyr` is an extension of the popular `quanteda` library you may be familiar with. If you haven't installed `spacyr`, you can find instructions for getting `spacyr` to run on the package's [website](https://cran.r-project.org/web/packages/spacyr/readme/README.html). `spacyr` let's you install both Python and spaCy with a single line of code from within R.
 
-Furthermore, we will need [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) - a package for development tools we will use to install `semgram`.
-
-Finally, `semgram` imports and builds on the [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) package maintained by Kasper Welbers and Wouter van Atteveldt. `rsyntax` is an general library for querying and reshaping dependency trees and was used to implement the rules contained in `semgram`. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go. You might also find their [`rsyntaxRecipes`](https://github.com/kasperwelbers/rsyntaxRecipes) useful.
+Finally, it should shouldn't go without mentioning that "under the hood" `semgram` builds on [`rsyntax`](https://cran.r-project.org/web/packages/rsyntax/index.html) - a general library for querying and reshaping dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing them from scratch, `rsyntax` is the way to go. You might also find their [`rsyntaxRecipes`](https://github.com/kasperwelbers/rsyntaxRecipes) useful.
 
 ```{r 1, warning=FALSE, results='hide', message=FALSE}
-library(devtools)
 library(spacyr)
-
-# Installing development version of semgram
-devtools::install_github("omstuhler/semgram")
 library(semgram)
 ```
 
 # Initialize spaCy annotation pipeline
 
-In order to make use of spaCy's functionality, we first need to initialize a spaCy annotation pipelines. These pipelines integrate different processing tasks such as tokenization, lemmatization, part-of-speech tagging, and dependency parsing. SpaCy currently maintains [four English language pipelines](https://spacy.io/models/en). You will need to download and initialize one of these models which can by done with the `spacyr` package. The models differ primarily in size and the time they take to run. Larger models tend to achieve slightly better performance. For this demo, the smallest model will suffice ("en_core_web_sm"). All English language pipelines employ the same part-of-speech tag set as well as the ClearNLP dependency scheme and are therefore compatible with the extraction rules implemented in `semgram`. While spaCy provides annotation pipelines for other languages, these use different part-of-speech tag sets and dependency schemes, making them incompatible with the (current!) version of `semgram`.
+In order to make use of spaCy's functionality, we first need to initialize a spaCy annotation pipeline. These pipelines integrate different processing tasks such as tokenization, lemmatization, part-of-speech tagging, and dependency parsing. SpaCy currently maintains [four English language pipelines](https://spacy.io/models/en). You will need to download and initialize one of these models which can by done from within R with the `spacyr` package. The models differ primarily in size and the time they take to run. Larger models tend to achieve slightly better performance. For this demo, the smallest model will suffice ("en_core_web_sm"). All English language pipelines employ the same part-of-speech tag set as well as the ClearNLP dependency scheme and are therefore compatible with the extraction rules implemented in `semgram`. While spaCy provides annotation pipelines for other languages, these use different part-of-speech tag sets and dependency schemes, making them incompatible with the (current!) version of `semgram`.
 
 ```{r 2, message=FALSE}
 # Uncomment for installing spaCy (and miniconda) in a 
@@ -280,4 +274,3 @@ cat("Percentage of motifs extracted in fast mode: ",
 print("Percentage of motifs extracted in fast mode by category:\n")
 round(unlist(lapply(motifs_fast, function(x) nrow(x)))/unlist(lapply(motifs, function(x) nrow(x))),3)*100
 ```
-

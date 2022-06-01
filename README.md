@@ -1,6 +1,6 @@
 # semgram: Extracting Semantic Motifs from Textual Data
 
-`semgram` extracts semantic motifs around entities in textual data. For details, please refer to this recent [paper](https://journals.sagepub.com/doi/full/10.1177/00491241221099551). `semgram` uses an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity. `semgram` uses a comprehensive set of extraction rules to recover semantic motifs from dependency trees (the output of dependency parsers). A demo can be found [here](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/vignettes/demo.html).
+`semgram` is an R package for extracting semantic motifs around entities in textual data. For details, please [refer to this recent paper](https://journals.sagepub.com/doi/full/10.1177/00491241221099551). `semgram` uses an entity-centered semantic grammar that distinguishes six classes of motifs: actions of an entity, treatments of an entity, agents acting upon an entity, patients acted upon by an entity, characterizations of an entity, and possessions of an entity. `semgram` uses a comprehensive set of extraction rules to recover semantic motifs from dependency trees (the output of dependency parsers). [A demo can be found here](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/vignettes/demo.html).
 
 `semgram` builds on functionalities of [`spacyr`](https://CRAN.R-project.org/package=spacyr) for dependency parsing and [`rsyntax`](https://CRAN.R-project.org/package=rsyntax) for implementing rules querying dependency trees. If you find yourself wanting to extract relations other than those incorporated in the `semgram` grammar and don't mind implementing the formal rules to do this from scratch, [`rsyntax`](https://github.com/vanatteveldt/rsyntax) is the way to go.
 
@@ -16,8 +16,8 @@ If you want to install the development version, you will need `devtools`.
 # Install
 install.packages("semgram")
 
-# Install development version
-#devtools::install_github("omstuhler/semgram")
+# Or, to install the development version
+devtools::install_github("omstuhler/semgram")
 ```
 
 ## Example
@@ -39,7 +39,7 @@ tokens_df
 
 The working horse of `semgram` is the `extract_motifs` function to which we pass an annotated tokens object. We can also specify in which entity we are interested (here "Emil"). By default, `extract_motifs` extracts motifs for all motif classes (actions, patients, treatments, etc.).
 
-In the example sentence, we find an action motif (a_chase) as well as a composite action-Patient motif (aP_chase_thief). For some more functionalities, check out the [demo](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/vignettes/demo.html).
+In the example sentence, we find an action motif (a_chase) as well as a composite action-Patient motif (aP_chase_thief). For some more functionalities, [check out the demo](https://htmlpreview.github.io/?https://github.com/omstuhler/semgram/blob/master/vignettes/demo.html).
 
 ```R
 extract_motifs(tokens = tokens_df, entities = c("Emil"), markup = T)
