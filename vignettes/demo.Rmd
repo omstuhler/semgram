@@ -108,7 +108,7 @@ It can also be useful to add the sentence in which a motif was contained, which 
 
 ```{r 7c, results = "hold"}
 motifs = extract_motifs(tokens = tokens, entities = "Biden", add_sentence = T)
-str(motifs$action_Patients)
+str(motifs$action_patients)
 ```
 
 

@@ -660,8 +660,14 @@ Nonetheless, this can be helpful for validation and for a mode of
 analyses that switches between distant and close readings of the
 text.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>motifs <span class="ot">=</span> <span class="fu">extract_motifs</span>(<span class="at">tokens =</span> tokens, <span class="at">entities =</span> <span class="st">&quot;Biden&quot;</span>, <span class="at">add_sentence =</span> T)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs<span class="sc">$</span>action_Patients)</span></code></pre></div>
-<pre><code>##  NULL</code></pre>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(motifs<span class="sc">$</span>action_patients)</span></code></pre></div>
+<pre><code>## &#39;data.frame&#39;:    1 obs. of  6 variables:
+##  $ doc_id  : chr &quot;text1&quot;
+##  $ ann_id  : Factor w/ 1 level &quot;text1.1.9&quot;: 1
+##  $ Entity  : chr &quot;Biden&quot;
+##  $ action  : chr &quot;announce&quot;
+##  $ Patient : chr &quot;plan&quot;
+##  $ sentence: chr &quot;The plan was announced early this week by Biden.&quot;</code></pre>
 </div>
 <div id="reproduce-table-2" class="section level1">
 <h1>Reproduce Table 2</h1>
@@ -1078,12 +1084,12 @@ mode.</p>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Time saved:&quot;</span>,</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">as.numeric</span>(time_gap_fast, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>)<span class="sc">/</span><span class="fu">as.numeric</span>(time_gap, <span class="at">units=</span><span class="st">&quot;secs&quot;</span>),<span class="dv">2</span>)<span class="sc">*</span><span class="dv">100</span>,<span class="st">&quot;%&quot;</span>)</span></code></pre></div>
 <pre><code>## Time normal mode:
-## Time difference of 8.702183 secs
+## Time difference of 7.027728 secs
 ## 
 ## Time fast mode:
-## Time difference of 1.967318 secs
+## Time difference of 2.073648 secs
 ## 
-## Time saved: 77 %</code></pre>
+## Time saved: 70 %</code></pre>
 <p>Finally, we compare the number of extracted motifs in the two modes.
 In the fast mode we are still able to extract most motifs we had
 discovered in the normal mode. Some motif classes are more heavily
