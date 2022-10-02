@@ -14,6 +14,9 @@ extract_motifs(
   extract = "lemma",
   markup = F,
   add_sentence = F,
+  add_paragraph = F,
+  verb_prep = F,
+  verb_prep_greedy = F,
   be_entity = T,
   get_aux_verbs = F,
   aux_verb_markup = T,
@@ -36,7 +39,7 @@ By default, all motif classes are considered. Note, however, that runtime increa
 
 \item{custom_cols}{Generally, the columns in the tokens object should be labeled as follows: "doc_id", "sentence_id", "token_id", "token", "lemma", "pos", "head_token_id" , "dep_rel". If the columns in your tokens object are not labeled according to this scheme, provide the matching column names to custom_cols in the corresponding order.}
 
-\item{fast}{If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
+\item{fast}{If set to TRUE, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.}
 
 \item{parse_multi_token_entities}{Should multi-token entities (e.g., "Harry Potter") be considered? Defaults to TRUE. When using multi-token entities, it is crucial that tokens are separated by a space character. Input should match the tokenized version in the tokens object.
 For instance, hyphens are usually considered a token in tokenization, so that "Claude Levi-Strauss" should be passed to the function as "Claude Levi - Strauss".}
@@ -47,8 +50,24 @@ For instance, hyphens are usually considered a token in tokenization, so that "C
 
 \item{add_sentence}{If TRUE, the sentence for each motif is added to the extracted motif. Note that this is done by pasting together the tokens of the sentence, so that the representation might differ minimally from the original text. Nonetheless, this can be helpful for validation and for a mode of analyses that switches between distant and close readings of the text. Defaults to FALSE. Note that setting this to TRUE will noticeably increase runtime.}
 
+\item{add_paragraph}{If TRUE, a pseudo-paragraph (the sentence the motif is contained in, as well as ones immediately before and after it) for each motif is added to the extracted motif. Defaults to FALSE. Setting this to TRUE will noticeably increase runtime.}
+
+\item{verb_prep}{If TRUE, prepositions that follow an action or treatment are added to the respective verb. For instance in "ENTITY believes in Sue." the action a_believe-in and the action-patient motif aP_believe-in_Sue will be extracted;
+whereas otherwise, only a_believe would be extracted.
+This is currently only implemented for the most common syntactic patterns for action, action-patient, treatment, and agent-treatment motifs (those also considered if fast is set to TRUE).
+Note that the number of action motifs is unaffected by this parameter as action motifs are extracted regardless of whether
+or not they have a preposition as dependent. However, the number of extracted action-patient, treatment, and agent-treatment motifs will increase if the parameter is set to
+TRUE because the relation between action and patient (as well as between treatment and ENTITY) is frequently mediated by a preposition. Note that setting this to TRUE will
+likely increase the level of sparsity in subsequent analyses.
+Defaults to FALSE.}
+
+\item{verb_prep_greedy}{By default, assuming verb_prep is set to TRUE, only prepositions immediately following a verb are considered (e.g., "ENTITY believes in Sue." leads to a_believe-in.) 
+but more distant ones are disregarded (e.g., "ENTITY slammed it on the table." leads to a_slam, not a_slam-on). This behavior can be changed if verb_prep_greedy is set to TRUE. 
+Note that this might result in some not immediately intuitive action motifs 
+(e.g., the action a_want-on as extracted from "ENTITY want you on television!").}
+
 \item{be_entity}{Should things that are linked to an entity via "being" (or one of its lemmas) be considered as characterization motifs?
-For example, if we are extracting characterizations around the "immigrants" in the sentence "my parents are immigrants", should we extract the characterization motif "be_parent"? Defaults to TRUE.}
+For example, if we are extracting characterizations in the sentence "my parents are ENTITY", should we extract the characterization motif "be_parent"? Defaults to TRUE.}
 
 \item{get_aux_verbs}{Should auxiliary verbs (e.g., can, could, may, must) be considered actions? Defaults to FALSE.}
 

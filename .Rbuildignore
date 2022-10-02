@@ -5,3 +5,4 @@
 vignettes
 demo\.html
 demo\.Rmd
+^CRAN-RELEASE$

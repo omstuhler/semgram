@@ -79,14 +79,27 @@ NULL
 #' This can include "t" for treatments, "a" for actions, "be" for characterizations, "H" for possessions, as well as "At" and "aP" for agent-treatment and action-patient motifs respectively.
 #' By default, all motif classes are considered. Note, however, that runtime increases with the number of motif classes considered.
 #' @param custom_cols Generally, the columns in the tokens object should be labeled as follows: "doc_id", "sentence_id", "token_id", "token", "lemma", "pos", "head_token_id" , "dep_rel". If the columns in your tokens object are not labeled according to this scheme, provide the matching column names to custom_cols in the corresponding order.
-#' @param fast If set to true, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.
+#' @param fast If set to TRUE, some of the more specific extraction rules are not applied. This results in fewer extractions but faster run time. Defaults to FALSE.
 #' @param parse_multi_token_entities Should multi-token entities (e.g., "Harry Potter") be considered? Defaults to TRUE. When using multi-token entities, it is crucial that tokens are separated by a space character. Input should match the tokenized version in the tokens object.
 #' For instance, hyphens are usually considered a token in tokenization, so that "Claude Levi-Strauss" should be passed to the function as "Claude Levi - Strauss".
 #' @param extract Defines whether extracted motifs are represented in "lemma" or "token" form. Defaults to "lemma" which reduces sparsity and is preferable for most purposes.
 #' @param markup If TRUE, motifs will also be provided as collapsed markup tokens (e.g., "aP_ask_Harry"). Defaults to FALSE.
 #' @param add_sentence If TRUE, the sentence for each motif is added to the extracted motif. Note that this is done by pasting together the tokens of the sentence, so that the representation might differ minimally from the original text. Nonetheless, this can be helpful for validation and for a mode of analyses that switches between distant and close readings of the text. Defaults to FALSE. Note that setting this to TRUE will noticeably increase runtime.
+#' @param add_paragraph If TRUE, a pseudo-paragraph (the sentence the motif is contained in, as well as ones immediately before and after it) for each motif is added to the extracted motif. Defaults to FALSE. Setting this to TRUE will noticeably increase runtime.
+#' @param verb_prep If TRUE, prepositions that follow an action or treatment are added to the respective verb. For instance in "ENTITY believes in Sue." the action a_believe-in and the action-patient motif aP_believe-in_Sue will be extracted;
+#' whereas otherwise, only a_believe would be extracted.
+#' This is currently only implemented for the most common syntactic patterns for action, action-patient, treatment, and agent-treatment motifs (those also considered if fast is set to TRUE).
+#' Note that the number of action motifs is unaffected by this parameter as action motifs are extracted regardless of whether
+#' or not they have a preposition as dependent. However, the number of extracted action-patient, treatment, and agent-treatment motifs will increase if the parameter is set to
+#' TRUE because the relation between action and patient (as well as between treatment and ENTITY) is frequently mediated by a preposition. Note that setting this to TRUE will
+#' likely increase the level of sparsity in subsequent analyses.
+#' Defaults to FALSE.
+#' @param verb_prep_greedy By default, assuming verb_prep is set to TRUE, only prepositions immediately following a verb are considered (e.g., "ENTITY believes in Sue." leads to a_believe-in.) 
+#' but more distant ones are disregarded (e.g., "ENTITY slammed it on the table." leads to a_slam, not a_slam-on). This behavior can be changed if verb_prep_greedy is set to TRUE. 
+#' Note that this might result in some not immediately intuitive action motifs 
+#' (e.g., the action a_want-on as extracted from "ENTITY want you on television!").
 #' @param be_entity Should things that are linked to an entity via "being" (or one of its lemmas) be considered as characterization motifs?
-#' For example, if we are extracting characterizations around the "immigrants" in the sentence "my parents are immigrants", should we extract the characterization motif "be_parent"? Defaults to TRUE.
+#' For example, if we are extracting characterizations in the sentence "my parents are ENTITY", should we extract the characterization motif "be_parent"? Defaults to TRUE.
 #' @param get_aux_verbs Should auxiliary verbs (e.g., can, could, may, must) be considered actions? Defaults to FALSE.
 #' @param aux_verb_markup Should auxiliary verbs with "to" be marked up so that "going" in "going to eat" becomes "going-to".
 #' Note that this will not affect cases of the sort "going to the bar." This can be useful for analyses concerning modality. Defaults to TRUE.
@@ -129,6 +142,9 @@ extract_motifs = function(tokens,
                           extract = "lemma",
                           markup = F,
                           add_sentence = F,
+                          add_paragraph = F,
+                          verb_prep = F,
+                          verb_prep_greedy = F,
                           be_entity = T,
                           get_aux_verbs = F,
                           aux_verb_markup = T,
@@ -175,6 +191,14 @@ extract_motifs = function(tokens,
   }
   if("dep_rel" %in% names(tokens)){
     names(tokens)[which(names(tokens) == "dep_rel")] = "relation"
+  }
+  
+  ###############################################################################################
+  ##### Set max preposition distance to the right for greedy preposition mode
+  if(verb_prep_greedy){
+    verb_prep_dist = 4
+  } else {
+    verb_prep_dist = 1
   }
 
   ###############################################################################################
@@ -345,12 +369,71 @@ extract_motifs = function(tokens,
 
     ###############################################################################################
     ##### Run fast rules
-    tryCatch({
-      nsubj_act_conj = a_1(tokens, entities, verb_pos, agent_patient_pos, extract)
-    }, error = function(e){
-      message("There was an error in extracting action motifs (a_1). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
-      nsubj_act_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
-    })
+    if(!verb_prep){
+      tryCatch({
+        nsubj_act_conj = a_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol() != 4){stop(nsubj_act_conj)}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      # Set other to empty
+      nsubj_act_conj_prep_1 = 
+        nsubj_act_conj_prep_2 = 
+        nsubj_act_conj_prep_3 = 
+        nsubj_act_conj_prep_4 = 
+        nsubj_act_conj_prep_5 = 
+        nsubj_act_conj_prep_6 = data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+    
+    ##### Run fast prep rules
+    } else {
+      tryCatch({
+        nsubj_act_conj_prep_1 = a_1_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_1) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_1). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      tryCatch({
+        nsubj_act_conj_prep_2 = a_1_prep_2(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_2) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_2). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_2 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      tryCatch({
+        nsubj_act_conj_prep_3 = a_1_prep_3(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_3) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_3). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_3 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      tryCatch({
+        nsubj_act_conj_prep_4 = a_1_prep_4(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_4) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_4). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_4 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      tryCatch({
+        nsubj_act_conj_prep_5 = a_1_prep_5(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_5) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_5). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_5 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      tryCatch({
+        nsubj_act_conj_prep_6 = a_1_prep_6(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_act_conj_prep_6) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action motifs (a_1_prep_6). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_act_conj_prep_6 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+      })
+      # Set other to empty
+      nsubj_act_conj <- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
+    }
+    
+
 
     ###############################################################################################
     ##### Run slow rules
@@ -368,56 +451,65 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         nsubj_act_noun_conj_verb_conj = a_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(nsubj_act_noun_conj_verb_conj) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_2). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_2). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_act_noun_conj_verb_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act = a_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_3). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_3). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act_noun_conjunct = a_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_noun_conjunct) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_4). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_4). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_noun_conjunct <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act_2 = a_5(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_2) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_5). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_5). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_2 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act_2_1 = a_6(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_2_1) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_6). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_6). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_2_1 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act_2_noun_conj = a_7(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_2_noun_conj) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_7). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_7). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_2_noun_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         by_act_2_noun_conj_1 = a_8(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_2_noun_conj_1) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_8). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_8). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_2_noun_conj_1 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         xcomp_act_conj_verb = a_9(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(xcomp_act_conj_verb) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_9). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_9). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_conj_verb <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
       tryCatch({
         xcomp_act_conj_noun = a_10(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(xcomp_act_conj_noun) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting action motifs (a_10). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting action motifs (a_10). Some action motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_conj_noun <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
       })
     }
@@ -429,13 +521,52 @@ extract_motifs = function(tokens,
 
   if("aP" %in% motif_classes){
     if(verbose){cat("Extracting action-patients\n")}
+    
     ###############################################################################################
+    ##### Run fast rules
     tryCatch({
       nsubj_obj_conj_act_aP_casted = aP_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(nsubj_obj_conj_act_aP_casted) != 5){stop()}
     }, error = function(e){
       message("There was an error in extracting action-patient motifs (aP_1). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       nsubj_obj_conj_act_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
     })
+    tryCatch({
+      xcomp_act_obj_aP_casted = aP_11(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(xcomp_act_obj_aP_casted) != 5){stop()}
+    }, error = function(e){
+      message("There was an error in extracting action-patient motifs (aP_11). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+      xcomp_act_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
+    })
+    
+    ##### Run fast prep rules
+    if(verb_prep){
+      tryCatch({
+        nsubj_obj_conj_act_aP_casted_prep_1 = aP_1_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_obj_conj_act_aP_casted_prep_1) != 5){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action-patient motifs (aP_1_prep_1). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_obj_conj_act_aP_casted_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
+      })
+      tryCatch({
+        nsubj_conj_obj_act_aP_casted_prep_1 = aP_3_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(nsubj_conj_obj_act_aP_casted_prep_1) != 5){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action-patient motifs (aP_3_prep_1). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        nsubj_conj_obj_act_aP_casted_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
+      })
+      tryCatch({
+        xcomp_act_obj_aP_casted_prep_1 = aP_11_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract, verb_prep_dist)
+        if(ncol(xcomp_act_obj_aP_casted_prep_1) != 5){stop()}
+      }, error = function(e){
+        message("There was an error in extracting action-patient motifs (aP_11_prep_1). Some action-patient motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        xcomp_act_obj_aP_casted_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
+      }) 
+    } else {
+      nsubj_obj_conj_act_aP_casted_prep_1 =
+        nsubj_conj_obj_act_aP_casted_prep_1 =
+        xcomp_act_obj_aP_casted_prep_1 = data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
+    }
 
     ###############################################################################################
     if(fast){
@@ -448,7 +579,6 @@ extract_motifs = function(tokens,
         by_act_obj_cverb_2_aP_casted =
         by_act_obj_cverb_cobj_1_aP_casted =
         by_act_obj_cverb_cobj_2_aP_casted =
-        xcomp_act_obj_aP_casted =
         xcomp_act_obj_vconj_aP_casted =
         xcomp_act_obj_nconj_aP_casted =
         xcomp_act_obj_nconj_vconj_aP_casted = data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
@@ -456,42 +586,49 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         nsubj_obj_conj_aP_casted = aP_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(nsubj_obj_conj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_2). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_obj_conj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         nsubj_conj_obj_act_aP_casted = aP_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(nsubj_conj_obj_act_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_3). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_conj_obj_act_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         nsubj_conj_subj_cons_obj_aP_casted = aP_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(nsubj_conj_subj_cons_obj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_4). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         nsubj_conj_subj_cons_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         by_act_obj_aP_casted = aP_5(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_5). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         by_act_obj_nc_aP_casted = aP_6(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_nc_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_6). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_nc_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         by_act_obj_cverb_1_aP_casted = aP_7(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_cverb_1_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_7). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_1_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         by_act_obj_cverb_2_aP_casted = aP_8(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_cverb_2_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_8). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_2_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
@@ -499,36 +636,35 @@ extract_motifs = function(tokens,
       })
       tryCatch({
         by_act_obj_cverb_cobj_1_aP_casted = aP_9(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_cverb_cobj_1_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_9). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_cobj_1_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         by_act_obj_cverb_cobj_2_aP_casted = aP_10(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_obj_cverb_cobj_2_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_10). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_obj_cverb_cobj_2_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
-        xcomp_act_obj_aP_casted = aP_11(tokens, entities, verb_pos, agent_patient_pos, extract)
-      }, error = function(e){
-        message("There was an error in extracting action-patient motifs (aP_11). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
-        xcomp_act_obj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
-      })
-      tryCatch({
         xcomp_act_obj_vconj_aP_casted = aP_12(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(xcomp_act_obj_vconj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_12). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_vconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         xcomp_act_obj_nconj_aP_casted = aP_13(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(xcomp_act_obj_nconj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_13). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_nconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
       })
       tryCatch({
         xcomp_act_obj_nconj_vconj_aP_casted = aP_14(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(xcomp_act_obj_nconj_vconj_aP_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting action-patient motifs (aP_14). Some action-patient motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         xcomp_act_obj_nconj_vconj_aP_casted <<- data.table(doc_id = character(), ann_id = factor(), action = character(), Entity = character(), Patient = character())
@@ -545,10 +681,24 @@ extract_motifs = function(tokens,
     ###############################################################################################
     tryCatch({
       dobj_treat = t_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(dobj_treat) != 4){stop()}
     }, error = function(e){
       message("There was an error in extracting treatment motifs (t_1). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       dobj_treat <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
     })
+    
+    ##### Run fast prep rules
+    if(verb_prep){
+      tryCatch({
+        dobj_treat_prep_1 = t_1_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(dobj_treat_prep_1) != 4){stop()}
+      }, error = function(e){
+        message("There was an error in extracting treatment motifs (t_1_prep_1). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        dobj_treat_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
+      })
+    } else {
+      dobj_treat_prep_1 = data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
+    }
 
     if(fast){
       ###############################################################################################
@@ -559,20 +709,23 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         dobj_conj_treat = t_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(dobj_conj_treat) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting treatment motifs (t_2). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting treatment motifs (t_2). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         dobj_conj_treat <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
       })
       tryCatch({
         obj_of_by_act = t_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(obj_of_by_act) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting treatment motifs (t_3). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting treatment motifs (t_3). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         obj_of_by_act <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
       })
       tryCatch({
         obj_of_by_act_nconj = t_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(obj_of_by_act_nconj) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting treatment motifs (t_4). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting treatment motifs (t_4). Some treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         obj_of_by_act_nconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), treatment = character())
       })
     }
@@ -586,10 +739,24 @@ extract_motifs = function(tokens,
     ###############################################################################################
     tryCatch({
       dobj_treat_actor_At_casted = At_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(dobj_treat_actor_At_casted) != 5){stop()}
     }, error = function(e){
       message("There was an error in extracting agent-treatment motifs (At_1). Some agent-treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       dobj_treat_actor_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
     })
+    
+    ##### Run fast prep rules
+    if(verb_prep){
+      tryCatch({
+        dobj_treat_actor_At_casted_prep_1 = At_1_prep_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(dobj_treat_actor_At_casted_prep_1) != 5){stop()}
+      }, error = function(e){
+        message("There was an error in extracting treatment motifs (At_1_prep_1). Some treatment motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        dobj_treat_actor_At_casted_prep_1 <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
+      })
+    } else {
+      dobj_treat_actor_At_casted_prep_1 = data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
+    }
 
     ###############################################################################################
     if(fast){
@@ -600,18 +767,21 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         dobj_treat_conj_actor_At_casted = At_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(dobj_treat_conj_actor_At_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting agent-treatment motifs (At_2). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         dobj_treat_conj_actor_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
       })
       tryCatch({
         dobj_nconj_treat_At_casted = At_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(dobj_nconj_treat_At_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting agent-treatment motifs (At_3). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         dobj_nconj_treat_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
       })
       tryCatch({
         by_act_agent_At_casted = At_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(by_act_agent_At_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting agent-treatment motifs (At_4). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         by_act_agent_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
@@ -619,6 +789,7 @@ extract_motifs = function(tokens,
       })
       tryCatch({
         obj_of_by_act_nconj_ac_At_casted = At_5(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(obj_of_by_act_nconj_ac_At_casted) != 5){stop()}
       }, error = function(e){
         message("There was an error in extracting agent-treatment motifs (At_5). Some agent-treatment motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         obj_of_by_act_nconj_ac_At_casted <<- data.table(doc_id = character(), ann_id = factor(), treatment = character(), Entity = character(), Agent = character())
@@ -636,12 +807,14 @@ extract_motifs = function(tokens,
     ###############################################################################################
     tryCatch({
       being_adj = be_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(being_adj) != 4){stop()}
     }, error = function(e){
       message("There was an error in extracting characterization motifs (be_1). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       being_adj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
     })
     tryCatch({
       amod_adj = be_6(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(amod_adj) != 4){stop()}
     }, error = function(e){
       message("There was an error in extracting characterization motifs (be_6). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       amod_adj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
@@ -658,24 +831,28 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         being_adj_nconj = be_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(being_adj_nconj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting characterization motifs (be_2). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         being_adj_nconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
       })
       tryCatch({
         appos_char = be_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(appos_char) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting characterization motifs (be_3). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         appos_char <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
       })
       tryCatch({
         being_adj_vconj = be_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(being_adj_vconj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting characterization motifs (be_4). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         being_adj_vconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
       })
       tryCatch({
         being_adj_xcomp = be_5(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(being_adj_xcomp) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting characterization motifs (be_5). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         being_adj_xcomp <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
@@ -687,8 +864,9 @@ extract_motifs = function(tokens,
       ###############################################################################################
       tryCatch({
         being_entity = be_7(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(being_entity) != 4){stop()}
       }, error = function(e){
-        message("There was an error in extracting characterization motifs (be_7). Some characterization motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
+        message("There was an error in extracting characterization motifs (be_7). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         being_entity <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
       })
 
@@ -698,6 +876,7 @@ extract_motifs = function(tokens,
       } else {
         tryCatch({
           being_entity_c = be_8(tokens, entities, verb_pos, agent_patient_pos, extract)
+          if(ncol(being_entity_c) != 4){stop()}
         }, error = function(e){
           message("There was an error in extracting characterization motifs (be_8). Some characterization motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
           being_entity_c <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), characterization = character())
@@ -718,12 +897,14 @@ extract_motifs = function(tokens,
     ###############################################################################################
     tryCatch({
       posessive_o = H_1(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(posessive_o) != 4){stop()}
     }, error = function(e){
       message("There was an error in extracting posession motifs (H_1). Some posession motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       posessive_o <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
     })
     tryCatch({
       have_nsubj_obj_conj_act = H_3(tokens, entities, verb_pos, agent_patient_pos, extract)
+      if(ncol(have_nsubj_obj_conj_act) != 4){stop()}
     }, error = function(e){
       message("There was an error in extracting possession motifs (H_3). Some possession motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
       have_nsubj_obj_conj_act <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
@@ -743,48 +924,56 @@ extract_motifs = function(tokens,
     } else {
       tryCatch({
         posessive_of = H_2(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(posessive_of) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting posession motifs (H_2). Some posession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         posessive_of <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_nsubj_obj_conj = H_4(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_nsubj_obj_conj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_4). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_nsubj_obj_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_nsubj_conj_obj_act = H_5(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_nsubj_conj_obj_act) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_5). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_nsubj_conj_obj_act <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_nsubj_conj_subj_cons_obj = H_6(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_nsubj_conj_subj_cons_obj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_6). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_nsubj_conj_subj_cons_obj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_xcomp_act_obj = H_7(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_xcomp_act_obj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_7). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_xcomp_act_obj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_xcomp_act_obj_vconj = H_8(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_xcomp_act_obj_vconj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_8). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_xcomp_act_obj_vconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_xcomp_act_obj_nconj = H_9(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_xcomp_act_obj_nconj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_9). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_xcomp_act_obj_nconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
       })
       tryCatch({
         have_xcomp_act_obj_nconj_vconj = H_10(tokens, entities, verb_pos, agent_patient_pos, extract)
+        if(ncol(have_xcomp_act_obj_nconj_vconj) != 4){stop()}
       }, error = function(e){
         message("There was an error in extracting possession motifs (H_10). Some possession motifs might not have been extracted properly. This is a secondary rule and you can probably proceed.")
         have_xcomp_act_obj_nconj_vconj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), Possession = character())
@@ -812,15 +1001,21 @@ extract_motifs = function(tokens,
   ###############################################################################################
   actions = if("a" %in% motif_classes){
     actions = rbind(nsubj_act_conj,
-                             nsubj_act_noun_conj_verb_conj,
-                             by_act,
-                             by_act_noun_conjunct,
-                             by_act_2,
-                             by_act_2_1,
-                             by_act_2_noun_conj,
-                             by_act_2_noun_conj_1,
-                             xcomp_act_conj_verb,
-                             xcomp_act_conj_noun)
+                    nsubj_act_conj_prep_1, 
+                    nsubj_act_conj_prep_2, 
+                    nsubj_act_conj_prep_3, 
+                    nsubj_act_conj_prep_4, 
+                    nsubj_act_conj_prep_5, 
+                    nsubj_act_conj_prep_6, 
+                    nsubj_act_noun_conj_verb_conj,
+                    by_act,
+                    by_act_noun_conjunct,
+                    by_act_2,
+                    by_act_2_1,
+                    by_act_2_noun_conj,
+                    by_act_2_noun_conj_1,
+                    xcomp_act_conj_verb,
+                    xcomp_act_conj_noun)
     if(lowercase){
       actions$Entity = tolower(actions$Entity)
       actions$action = tolower(actions$action)
@@ -837,11 +1032,15 @@ extract_motifs = function(tokens,
   if(add_sentence & length(actions) > 0){
     actions$sentence = mapply(retrieve_sentence, actions$doc_id, str_extract(actions$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
+  if(add_paragraph & length(actions) > 0){
+    actions$paragraph = mapply(retrieve_paragraph, actions$doc_id, str_extract(actions$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
 
 
   ###############################################################################################
   treatments = if("t" %in% motif_classes){
     treatments = rbind(dobj_treat,
+                       dobj_treat_prep_1,
                        dobj_conj_treat,
                        obj_of_by_act,
                        obj_of_by_act_nconj
@@ -861,6 +1060,9 @@ extract_motifs = function(tokens,
   if(markup & length(treatments) > 0){treatments$markup = paste0("t_", treatments$treatment)}
   if(add_sentence & length(treatments) > 0){
     treatments$sentence = mapply(retrieve_sentence, treatments$doc_id, str_extract(treatments$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
+  if(add_paragraph & length(treatments) > 0){
+    treatments$paragraph = mapply(retrieve_paragraph, treatments$doc_id, str_extract(treatments$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
 
   ###############################################################################################
@@ -889,6 +1091,9 @@ extract_motifs = function(tokens,
   if(markup & length(characterizations) > 0){characterizations$markup = paste0("be_", characterizations$characterization)}
   if(add_sentence & length(characterizations) > 0){
     characterizations$sentence = mapply(retrieve_sentence, characterizations$doc_id, str_extract(characterizations$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
+  if(add_paragraph & length(characterizations) > 0){
+    characterizations$paragraph = mapply(retrieve_paragraph, characterizations$doc_id, str_extract(characterizations$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
 
   ###############################################################################################
@@ -920,10 +1125,15 @@ extract_motifs = function(tokens,
   if(add_sentence & length(possessions) > 0){
     possessions$sentence = mapply(retrieve_sentence, possessions$doc_id, str_extract(possessions$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
+  if(add_paragraph & length(possessions) > 0){
+    possessions$paragraph = mapply(retrieve_paragraph, possessions$doc_id, str_extract(possessions$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
+  
 
   ################################################################################################
   agent_treatments = if("At" %in% motif_classes){
     agent_treatments = rbind(dobj_treat_actor_At_casted,
+                             dobj_treat_actor_At_casted_prep_1,
                              dobj_treat_conj_actor_At_casted,
                              dobj_nconj_treat_At_casted,
                              by_act_agent_At_casted,
@@ -953,12 +1163,17 @@ extract_motifs = function(tokens,
   if(add_sentence & length(agent_treatments) > 0){
     agent_treatments$sentence = mapply(retrieve_sentence, agent_treatments$doc_id, str_extract(agent_treatments$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
+  if(add_paragraph & length(agent_treatments) > 0){
+    agent_treatments$paragraph = mapply(retrieve_paragraph, agent_treatments$doc_id, str_extract(agent_treatments$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
 
   ################################################################################################
   action_Patients = if("aP" %in% motif_classes){
     action_Patients = rbind(nsubj_obj_conj_act_aP_casted,
+                            nsubj_obj_conj_act_aP_casted_prep_1,
                             nsubj_obj_conj_aP_casted,
                             nsubj_conj_obj_act_aP_casted,
+                            nsubj_conj_obj_act_aP_casted_prep_1,
                             nsubj_conj_subj_cons_obj_aP_casted,
                             by_act_obj_aP_casted,
                             by_act_obj_nc_aP_casted,
@@ -967,6 +1182,7 @@ extract_motifs = function(tokens,
                             by_act_obj_cverb_cobj_1_aP_casted,
                             by_act_obj_cverb_cobj_2_aP_casted,
                             xcomp_act_obj_aP_casted,
+                            xcomp_act_obj_aP_casted_prep_1,
                             xcomp_act_obj_vconj_aP_casted,
                             xcomp_act_obj_nconj_aP_casted,
                             xcomp_act_obj_nconj_vconj_aP_casted)
@@ -994,6 +1210,9 @@ extract_motifs = function(tokens,
   }
   if(add_sentence & length(action_Patients) > 0){
     action_Patients$sentence = mapply(retrieve_sentence, action_Patients$doc_id, str_extract(action_Patients$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
+  }
+  if(add_paragraph & length(action_Patients) > 0){
+    action_Patients$paragraph = mapply(retrieve_paragraph, action_Patients$doc_id, str_extract(action_Patients$ann_id, "(?<=[.])[0-9]+(?=.)"), MoreArgs = list(tok_obj = tokens))
   }
 
   ##### Combine to list object

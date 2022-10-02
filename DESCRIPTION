@@ -1,7 +1,7 @@
 Type: Package
 Package: semgram
 Title: Extracting Semantic Motifs from Textual Data
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
 	person(given = "Oscar", 
 			family = "Stuhler", 
@@ -19,7 +19,7 @@ Depends:
 	R (>= 3.5.3)
 Imports:
     data.table,
-	rsyntax (>= 0.1.2),
+	rsyntax (>= 0.1.4),
 	stringr
 Author: 
 	Oscar Stuhler [aut, cre]  (<https://orcid.org/0000-0001-7391-1743>)
