@@ -6,17 +6,17 @@
 
 If you use `semgram` in your research, please cite it as follows:
 
-> Stuhler, Oscar (2022). "Who does What to Whom? Making Text Parsers Work for Sociological Inquiry." *Sociological Methods & Research*. doi: 10.1177/00491241221099551.
+> Stuhler, Oscar (2022). "Who does What to Whom? Making Text Parsers Work for Sociological Inquiry." *Sociological Methods & Research*. [doi: 10.1177/00491241221099551.](https://journals.sagepub.com/doi/full/10.1177/00491241221099551)
 
 ## Installation
 
 If you want to install the development version, you will need `devtools`.
 
 ```R
-# Install (currently 0.1.0)
+# Install from CRAN (currently 0.1.0)
 install.packages("semgram")
 
-# Or, to install the development version (currently 0.1.1)
+# Or, to install the development version (currently 0.1.1, for differences, see NEWS.md)
 devtools::install_github("omstuhler/semgram")
 ```
 
