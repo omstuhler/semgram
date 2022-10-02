@@ -13,10 +13,10 @@ If you use `semgram` in your research, please cite it as follows:
 If you want to install the development version, you will need `devtools`.
 
 ```R
-# Install
+# Install (currently 0.1.0)
 install.packages("semgram")
 
-# Or, to install the development version
+# Or, to install the development version (currently 0.1.1)
 devtools::install_github("omstuhler/semgram")
 ```
 
