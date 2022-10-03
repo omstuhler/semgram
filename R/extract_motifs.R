@@ -372,7 +372,7 @@ extract_motifs = function(tokens,
     if(!verb_prep){
       tryCatch({
         nsubj_act_conj = a_1(tokens, entities, verb_pos, agent_patient_pos, extract)
-        if(ncol() != 4){stop(nsubj_act_conj)}
+        if(ncol(nsubj_act_conj) != 4){stop(nsubj_act_conj)}
       }, error = function(e){
         message("There was an error in extracting action motifs (a_1). Some action motifs might not have been extracted properly. This is an important rule and you probably shouldn't proceed.")
         nsubj_act_conj <<- data.table(doc_id = character(), ann_id = factor(), Entity = character(), action = character())
